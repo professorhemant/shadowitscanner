@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { login as loginApi } from '../api/auth';
 import { useAuthStore } from '../store/authStore';
 
@@ -48,6 +48,9 @@ export default function Login() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+        <p className="text-center text-sm text-slate-500 mt-4">
+          No account? <Link to="/register" className="text-brand-500 hover:text-brand-400">Create one free</Link>
+        </p>
       </div>
     </div>
   );
