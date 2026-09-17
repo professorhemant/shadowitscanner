@@ -1,0 +1,10 @@
+{
+  "name": "shadow-it-scanner-monorepo",
+  "private": true,
+  "workspaces": ["cli", "backend", "frontend"],
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "npm install && cd cli && npm install && cd ../backend && npm install && cd ../frontend && npm install"
+  }
+}
