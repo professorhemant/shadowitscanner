@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
+import { me } from './api/auth';
 import AppShell from './components/layout/AppShell';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import Landing from './pages/Landing';
@@ -14,6 +16,13 @@ import Alerts from './pages/Alerts';
 import Settings from './pages/Settings';
 
 export default function App() {
+  const { token, setAuth, logout } = useAuthStore();
+
+  useEffect(() => {
+    if (!token) return;
+    me().then(res => setAuth(res.data.user, token)).catch(() => logout());
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
