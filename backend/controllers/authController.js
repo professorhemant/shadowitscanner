@@ -35,4 +35,21 @@ async function me(req, res) {
   res.json({ user: { id: req.user.id, name: req.user.name, email: req.user.email, plan: req.user.plan } });
 }
 
-module.exports = { register, login, me };
+async function changePassword(req, res, next) {
+  try {
+    const { current_password, new_password } = req.body;
+    if (!current_password || !new_password) return res.status(400).json({ message: 'Both fields are required' });
+    if (new_password.length < 8) return res.status(400).json({ message: 'New password must be at least 8 characters' });
+
+    const { User } = require('../models');
+    const user = await User.findByPk(req.user.id);
+    const valid = await bcrypt.compare(current_password, user.password_hash);
+    if (!valid) return res.status(401).json({ message: 'Current password is incorrect' });
+
+    user.password_hash = await bcrypt.hash(new_password, 12);
+    await user.save();
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) { next(err); }
+}
+
+module.exports = { register, login, me, changePassword };
