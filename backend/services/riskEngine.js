@@ -1,9 +1,6 @@
 'use strict';
 
-// Mirror of cli/src/scoring/engine.js for server-side use
-const SLACK_SCOPE_WEIGHTS = require('../../cli/src/scoring/constants').SLACK_SCOPE_WEIGHTS;
-const GOOGLE_SCOPE_WEIGHTS = require('../../cli/src/scoring/constants').GOOGLE_SCOPE_WEIGHTS;
-const { EMAIL_SCOPES, CALENDAR_SCOPES, DRIVE_SCOPES, ADMIN_SCOPES, WRITE_SCOPES, getRiskLevel } = require('../../cli/src/scoring/constants');
+const { SLACK_SCOPE_WEIGHTS, GOOGLE_SCOPE_WEIGHTS, EMAIL_SCOPES, CALENDAR_SCOPES, DRIVE_SCOPES, ADMIN_SCOPES, WRITE_SCOPES, getRiskLevel } = require('../utils/scoringConstants');
 
 function scoreApp(app) {
   const scopes = app.scopes || [];
