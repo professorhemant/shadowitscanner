@@ -14,7 +14,8 @@ client.interceptors.request.use(cfg => {
 client.interceptors.response.use(
   r => r,
   err => {
-    if (err.response?.status === 401) {
+    const onAuthPage = ['/login', '/register'].some(p => window.location.pathname.startsWith(p));
+    if (err.response?.status === 401 && !onAuthPage) {
       localStorage.removeItem('shadow_token');
       window.location.href = '/login';
     }
