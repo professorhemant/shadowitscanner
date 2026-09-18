@@ -21,6 +21,7 @@ import SpendEstimator from './pages/SpendEstimator';
 import Reports from './pages/Reports';
 import Breaches from './pages/Breaches';
 import Offboarding from './pages/Offboarding';
+import Extension from './pages/Extension';
 
 export default function App() {
   const { token, setAuth, logout } = useAuthStore();
@@ -51,6 +52,7 @@ export default function App() {
           <Route path="/reports" element={<Reports />} />
           <Route path="/breaches" element={<Breaches />} />
           <Route path="/offboarding" element={<Offboarding />} />
+          <Route path="/extension" element={<Extension />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -16,5 +16,6 @@ router.use('/spend', require('./spend'));
 router.use('/reports', require('./reports'));
 router.use('/breaches', require('./breaches'));
 router.use('/offboarding', require('./offboarding'));
+router.use('/extension', require('./extension'));
 
 module.exports = router;

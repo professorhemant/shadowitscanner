@@ -144,6 +144,23 @@ async function runMigrations() {
       await sequelize.query(`ALTER TYPE "enum_whitelisted_apps_source" ADD VALUE IF NOT EXISTS 'jira'`);
       console.log('Migration: updated whitelisted_apps.source enum');
     } catch (e) { /* already exists */ }
+    try {
+      await sequelize.query(`ALTER TYPE "enum_discovered_apps_source" ADD VALUE IF NOT EXISTS 'extension'`);
+      console.log('Migration: added extension to discovered_apps.source enum');
+    } catch (e) { /* already exists */ }
+    try {
+      await sequelize.query(`ALTER TYPE "enum_whitelisted_apps_source" ADD VALUE IF NOT EXISTS 'extension'`);
+      console.log('Migration: added extension to whitelisted_apps.source enum');
+    } catch (e) { /* already exists */ }
+    // extension scan run source
+    try {
+      await sequelize.query(`ALTER TYPE "enum_scan_runs_source" ADD VALUE IF NOT EXISTS 'extension'`);
+      console.log('Migration: added extension to scan_runs.source enum');
+    } catch (e) { /* already exists */ }
+    try {
+      await sequelize.query(`ALTER TYPE "enum_scan_runs_triggered_by" ADD VALUE IF NOT EXISTS 'extension'`);
+      console.log('Migration: added extension to scan_runs.triggered_by enum');
+    } catch (e) { /* already exists */ }
   }
 
   // ── nudge_logs ───────────────────────────────────────────────────────────
