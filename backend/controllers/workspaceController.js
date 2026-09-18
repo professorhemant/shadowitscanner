@@ -15,12 +15,14 @@ async function list(req, res, next) {
 async function create(req, res, next) {
   try {
     const { name, type, slack_team_id, slack_bot_token, slack_user_token,
-            google_domain, google_service_account, google_admin_email, schedule } = req.body;
+            google_domain, google_service_account, google_admin_email,
+            ms_tenant_id, ms_client_id, ms_client_secret, schedule } = req.body;
 
     const workspace = await Workspace.create({
       user_id: req.user.id, name, type,
       slack_team_id, slack_bot_token, slack_user_token,
-      google_domain, google_service_account, google_admin_email, schedule,
+      google_domain, google_service_account, google_admin_email,
+      ms_tenant_id, ms_client_id, ms_client_secret, schedule,
     });
 
     res.status(201).json({
@@ -38,7 +40,9 @@ async function update(req, res, next) {
     const ws = await Workspace.findOne({ where: { id: req.params.id, user_id: req.user.id } });
     if (!ws) return res.status(404).json({ message: 'Workspace not found' });
     const allowed = ['name', 'slack_bot_token', 'slack_user_token', 'google_domain',
-                     'google_service_account', 'google_admin_email', 'schedule', 'is_active'];
+                     'google_service_account', 'google_admin_email',
+                     'ms_tenant_id', 'ms_client_id', 'ms_client_secret',
+                     'schedule', 'is_active'];
     for (const key of allowed) {
       if (req.body[key] !== undefined) ws[key] = req.body[key];
     }

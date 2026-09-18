@@ -1,11 +1,13 @@
 'use strict';
 
-const { SLACK_SCOPE_WEIGHTS, GOOGLE_SCOPE_WEIGHTS, EMAIL_SCOPES, CALENDAR_SCOPES, DRIVE_SCOPES, ADMIN_SCOPES, WRITE_SCOPES, getRiskLevel } = require('../utils/scoringConstants');
+const { SLACK_SCOPE_WEIGHTS, GOOGLE_SCOPE_WEIGHTS, MICROSOFT_SCOPE_WEIGHTS, EMAIL_SCOPES, CALENDAR_SCOPES, DRIVE_SCOPES, ADMIN_SCOPES, WRITE_SCOPES, getRiskLevel } = require('../utils/scoringConstants');
 
 function scoreApp(app) {
   const scopes = app.scopes || [];
   const source = app.source;
-  const weightTable = source === 'slack' ? SLACK_SCOPE_WEIGHTS : GOOGLE_SCOPE_WEIGHTS;
+  const weightTable = source === 'slack' ? SLACK_SCOPE_WEIGHTS
+    : source === 'microsoft' ? MICROSOFT_SCOPE_WEIGHTS
+    : GOOGLE_SCOPE_WEIGHTS;
 
   const factors = [];
   let score = 0;

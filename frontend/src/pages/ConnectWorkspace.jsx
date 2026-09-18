@@ -3,9 +3,20 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createWorkspace } from '../api/workspaces';
 import { useNavigate } from 'react-router-dom';
 
+const TABS = [
+  { id: 'slack',     label: '💬 Slack' },
+  { id: 'google',    label: '📁 Google Workspace' },
+  { id: 'microsoft', label: '🪟 Microsoft 365' },
+];
+
 export default function ConnectWorkspace() {
   const [type, setType] = useState('slack');
-  const [form, setForm] = useState({ name: '', slack_bot_token: '', slack_user_token: '', google_domain: '', google_admin_email: '' });
+  const [form, setForm] = useState({
+    name: '',
+    slack_bot_token: '', slack_user_token: '',
+    google_domain: '', google_admin_email: '',
+    ms_tenant_id: '', ms_client_id: '', ms_client_secret: '',
+  });
   const [saFile, setSaFile] = useState(null);
   const [error, setError] = useState('');
   const qc = useQueryClient();
@@ -32,14 +43,14 @@ export default function ConnectWorkspace() {
   return (
     <div className="p-6 max-w-2xl">
       <h1 className="text-2xl font-bold text-white mb-2">Connect Workspace</h1>
-      <p className="text-slate-400 text-sm mb-6">Connect your Slack or Google Workspace to start scanning for shadow IT.</p>
+      <p className="text-slate-400 text-sm mb-6">Connect Slack, Google Workspace, or Microsoft 365 to start scanning for shadow IT.</p>
 
       {/* Type toggle */}
-      <div className="flex gap-3 mb-6">
-        {['slack', 'google'].map(t => (
-          <button key={t} onClick={() => setType(t)}
-            className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-colors capitalize ${type === t ? 'bg-brand-600 text-white' : 'bg-surface-card text-slate-400 border border-surface-border hover:border-slate-500'}`}>
-            {t === 'slack' ? '💬 Slack' : '📁 Google Workspace'}
+      <div className="flex gap-3 mb-6 flex-wrap">
+        {TABS.map(t => (
+          <button key={t.id} onClick={() => setType(t.id)}
+            className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-colors ${type === t.id ? 'bg-brand-600 text-white' : 'bg-surface-card text-slate-400 border border-surface-border hover:border-slate-500'}`}>
+            {t.label}
           </button>
         ))}
       </div>
@@ -89,6 +100,39 @@ export default function ConnectWorkspace() {
               <input type="file" accept=".json" onChange={e => setSaFile(e.target.files[0])} required
                 className="w-full text-sm text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-slate-700 file:text-slate-300 file:text-xs cursor-pointer" />
               <p className="text-xs text-slate-600 mt-1">Must have Admin SDK Reports API + domain-wide delegation configured.</p>
+            </div>
+          </>
+        )}
+
+        {type === 'microsoft' && (
+          <>
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3 text-xs text-blue-300 space-y-1">
+              <p className="font-medium">Setup required in Azure Portal:</p>
+              <ol className="list-decimal list-inside space-y-0.5 text-blue-400">
+                <li>Register an App in <strong>Azure AD → App registrations</strong></li>
+                <li>Add API permissions: <code>Application.Read.All</code>, <code>Directory.Read.All</code>, <code>User.Read.All</code> (Application type)</li>
+                <li>Click <strong>Grant admin consent</strong></li>
+                <li>Create a <strong>Client secret</strong> under Certificates &amp; secrets</li>
+              </ol>
+            </div>
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Tenant ID <span className="text-slate-600">(Directory ID)</span></label>
+              <input type="text" value={form.ms_tenant_id} onChange={e => set('ms_tenant_id', e.target.value)} required
+                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                className="w-full bg-slate-800 border border-surface-border rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500 font-mono" />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Client ID <span className="text-slate-600">(Application ID)</span></label>
+              <input type="text" value={form.ms_client_id} onChange={e => set('ms_client_id', e.target.value)} required
+                placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                className="w-full bg-slate-800 border border-surface-border rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500 font-mono" />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Client Secret</label>
+              <input type="password" value={form.ms_client_secret} onChange={e => set('ms_client_secret', e.target.value)} required
+                placeholder="Your app's client secret value"
+                className="w-full bg-slate-800 border border-surface-border rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500" />
+              <p className="text-xs text-slate-600 mt-1">Stored encrypted. Scans all OAuth apps authorized by users in your tenant.</p>
             </div>
           </>
         )}

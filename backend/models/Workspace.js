@@ -8,7 +8,7 @@ const Workspace = sequelize.define('Workspace', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   user_id: { type: DataTypes.UUID, allowNull: false },
   name: { type: DataTypes.STRING(255), allowNull: false },
-  type: { type: DataTypes.ENUM('slack', 'google'), allowNull: false },
+  type: { type: DataTypes.ENUM('slack', 'google', 'microsoft'), allowNull: false },
   slack_team_id: { type: DataTypes.STRING(128), allowNull: true },
   slack_bot_token: {
     type: DataTypes.TEXT, allowNull: true,
@@ -27,6 +27,13 @@ const Workspace = sequelize.define('Workspace', {
     set(v) { this.setDataValue('google_service_account', encrypt(v ? JSON.stringify(v) : null)); },
   },
   google_admin_email: { type: DataTypes.STRING(255), allowNull: true },
+  ms_tenant_id: { type: DataTypes.STRING(255), allowNull: true },
+  ms_client_id: { type: DataTypes.STRING(255), allowNull: true },
+  ms_client_secret: {
+    type: DataTypes.TEXT, allowNull: true,
+    get() { return decrypt(this.getDataValue('ms_client_secret')); },
+    set(v) { this.setDataValue('ms_client_secret', encrypt(v)); },
+  },
   is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
   last_scan_at: { type: DataTypes.DATE, allowNull: true },
   schedule: { type: DataTypes.STRING(50), allowNull: true }, // cron expression
