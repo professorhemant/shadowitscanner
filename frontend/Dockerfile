@@ -1,4 +1,5 @@
 FROM node:20-alpine AS build
+ARG CACHEBUST=1
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
