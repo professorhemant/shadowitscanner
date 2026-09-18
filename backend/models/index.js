@@ -10,6 +10,8 @@ const AlertConfig = require('./AlertConfig');
 const TeamMember = require('./TeamMember');
 const NudgeLog = require('./NudgeLog');
 const ApprovalRequest = require('./ApprovalRequest');
+const WebhookConfig = require('./WebhookConfig');
+const WebhookDelivery = require('./WebhookDelivery');
 
 // Associations
 User.hasMany(Workspace, { foreignKey: 'user_id', onDelete: 'CASCADE' });
@@ -41,6 +43,12 @@ NudgeLog.belongsTo(Workspace, { foreignKey: 'workspace_id' });
 
 Workspace.hasMany(ApprovalRequest, { foreignKey: 'workspace_id', onDelete: 'CASCADE' });
 ApprovalRequest.belongsTo(Workspace, { foreignKey: 'workspace_id' });
+
+Workspace.hasMany(WebhookConfig, { foreignKey: 'workspace_id', onDelete: 'CASCADE' });
+WebhookConfig.belongsTo(Workspace, { foreignKey: 'workspace_id' });
+
+WebhookConfig.hasMany(WebhookDelivery, { foreignKey: 'webhook_config_id', onDelete: 'CASCADE' });
+WebhookDelivery.belongsTo(WebhookConfig, { foreignKey: 'webhook_config_id' });
 
 async function runMigrations() {
   const { DataTypes } = require('sequelize');
@@ -195,6 +203,20 @@ async function runMigrations() {
     console.log('Migration: created approval_requests table');
   }
 
+  // ── webhook_configs ──────────────────────────────────────────────────────
+  const webhookDesc = await qi.describeTable('webhook_configs').catch(() => null);
+  if (!webhookDesc) {
+    await WebhookConfig.sync({ force: false });
+    console.log('Migration: created webhook_configs table');
+  }
+
+  // ── webhook_deliveries ───────────────────────────────────────────────────
+  const deliveryDesc = await qi.describeTable('webhook_deliveries').catch(() => null);
+  if (!deliveryDesc) {
+    await WebhookDelivery.sync({ force: false });
+    console.log('Migration: created webhook_deliveries table');
+  }
+
   console.log('Migrations complete');
 }
 
@@ -204,4 +226,4 @@ async function syncDB() {
   console.log('Database synced');
 }
 
-module.exports = { sequelize, syncDB, User, Workspace, ScanRun, DiscoveredApp, WhitelistedApp, AlertConfig, TeamMember, NudgeLog, ApprovalRequest };
+module.exports = { sequelize, syncDB, User, Workspace, ScanRun, DiscoveredApp, WhitelistedApp, AlertConfig, TeamMember, NudgeLog, ApprovalRequest, WebhookConfig, WebhookDelivery };

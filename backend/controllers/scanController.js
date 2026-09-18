@@ -8,6 +8,7 @@ const { scanOkta } = require('../services/oktaScanner');
 const { scanGithub } = require('../services/githubScanner');
 const { scanJira } = require('../services/jiraScanner');
 const { sendAlertEmail, sendNudgeEmail } = require('../services/emailService');
+const { fireForApps, fireEvent } = require('../services/webhookService');
 
 async function persistScanResults(workspaceId, source, apps, triggeredBy, scanRunId) {
   const counts = { critical: 0, high: 0, medium: 0, low: 0 };
@@ -57,6 +58,17 @@ async function persistScanResults(workspaceId, source, apps, triggeredBy, scanRu
   );
 
   await Workspace.update({ last_scan_at: new Date() }, { where: { id: workspaceId } });
+
+  // Fire webhooks async (don't block)
+  fireForApps(workspaceId, apps, scanRunId).catch(() => {});
+  fireEvent(workspaceId, 'scan.completed', {
+    scan_run_id: scanRunId,
+    apps_found: apps.length,
+    critical_count: counts.critical,
+    high_count: counts.high,
+    source,
+  }).catch(() => {});
+
   return run;
 }
 
