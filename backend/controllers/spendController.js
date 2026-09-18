@@ -1,7 +1,6 @@
 'use strict';
 
 const { Workspace, DiscoveredApp } = require('../models');
-const { Op } = require('sequelize');
 const { lookupPricing, estimateMonthlyCost } = require('../services/pricingRegistry');
 
 async function getSpend(req, res, next) {
@@ -13,7 +12,7 @@ async function getSpend(req, res, next) {
     // Get unique apps (latest instance per app_id) for this workspace
     const apps = await DiscoveredApp.findAll({
       where: { workspace_id },
-      attributes: ['app_id', 'app_name', 'developer', 'source', 'user_count', 'risk_level', 'risk_score', 'is_ai_tool', 'is_whitelisted'],
+      attributes: ['app_id', 'app_name', 'developer', 'source', 'user_count', 'risk_level', 'risk_score', 'is_ai_tool'],
       order: [['last_seen_at', 'DESC']],
     });
 
@@ -37,7 +36,6 @@ async function getSpend(req, res, next) {
         risk_level: a.risk_level,
         risk_score: a.risk_score,
         is_ai_tool: a.is_ai_tool,
-        is_whitelisted: a.is_whitelisted,
         pricing: pricing ? {
           category: pricing.category,
           has_free_tier: pricing.has_free_tier,
