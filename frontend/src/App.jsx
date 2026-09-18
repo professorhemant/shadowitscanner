@@ -19,6 +19,7 @@ import Approvals from './pages/Approvals';
 import RequestApproval from './pages/RequestApproval';
 import SpendEstimator from './pages/SpendEstimator';
 import Reports from './pages/Reports';
+import Breaches from './pages/Breaches';
 
 export default function App() {
   const { token, setAuth, logout } = useAuthStore();
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/approvals" element={<Approvals />} />
           <Route path="/spend" element={<SpendEstimator />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/breaches" element={<Breaches />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

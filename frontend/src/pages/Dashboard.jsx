@@ -3,6 +3,7 @@ import { getDashboardStats } from '../api/dashboard';
 import { listWorkspaces } from '../api/workspaces';
 import { triggerScan } from '../api/scans';
 import { seedDemo } from '../api/demo';
+import { getBreaches } from '../api/breaches';
 import { useWorkspaceStore } from '../store/workspaceStore';
 import RiskSummaryCards from '../components/dashboard/RiskSummaryCards';
 import RiskPieChart from '../components/dashboard/RiskPieChart';
@@ -23,6 +24,13 @@ export default function Dashboard() {
     queryKey: ['dashboard', activeWorkspace?.id],
     queryFn: () => getDashboardStats(activeWorkspace?.id).then(r => r.data),
     enabled: true,
+  });
+
+  const { data: breachData } = useQuery({
+    queryKey: ['breaches', activeWorkspace?.id],
+    queryFn: () => getBreaches(activeWorkspace.id).then(r => r.data),
+    enabled: !!activeWorkspace?.id,
+    staleTime: 300_000,
   });
 
   const scan = useMutation({
@@ -96,6 +104,24 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* Breach alert banner */}
+      {breachData?.summary?.apps_with_breaches > 0 && (
+        <Link to="/breaches" className="flex items-center gap-3 p-3 bg-red-900/20 border border-red-700/40 rounded-xl hover:bg-red-900/30 transition-colors">
+          <span className="text-lg">🚨</span>
+          <div className="flex-1 min-w-0">
+            <span className="text-red-300 font-semibold text-sm">
+              {breachData.summary.apps_with_breaches} app{breachData.summary.apps_with_breaches !== 1 ? 's' : ''} in your workspace {breachData.summary.apps_with_breaches !== 1 ? 'have' : 'has'} known data breaches
+            </span>
+            {breachData.summary.critical_count > 0 && (
+              <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-600/40">
+                {breachData.summary.critical_count} CRITICAL
+              </span>
+            )}
+          </div>
+          <span className="text-red-400 text-sm shrink-0">View alerts →</span>
+        </Link>
+      )}
 
       {isLoading ? (
         <div className="text-slate-400 text-sm">Loading stats…</div>

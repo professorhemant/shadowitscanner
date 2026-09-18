@@ -10,6 +10,7 @@ const nav = [
   { to: '/nudges', label: 'Nudges', icon: '📣' },
   { to: '/approvals', label: 'Approvals', icon: '📋' },
   { to: '/spend', label: 'Spend Estimator', icon: '💰' },
+  { to: '/breaches', label: 'Breach Alerts', icon: '🚨' },
   { to: '/reports', label: 'Reports', icon: '📄' },
   { to: '/connect', label: 'Connect Workspace', icon: '+' },
   { to: '/settings', label: 'Settings', icon: '⚙' },
