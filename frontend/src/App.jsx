@@ -24,6 +24,7 @@ import Offboarding from './pages/Offboarding';
 import Extension from './pages/Extension';
 import Sensitivity from './pages/Sensitivity';
 import VendorRisk from './pages/VendorRisk';
+import SlackBot from './pages/SlackBot';
 
 export default function App() {
   const { token, setAuth, logout } = useAuthStore();
@@ -57,6 +58,7 @@ export default function App() {
           <Route path="/extension" element={<Extension />} />
           <Route path="/sensitivity" element={<Sensitivity />} />
           <Route path="/vendor-risk" element={<VendorRisk />} />
+          <Route path="/slack-bot" element={<SlackBot />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

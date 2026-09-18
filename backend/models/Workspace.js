@@ -53,6 +53,14 @@ const Workspace = sequelize.define('Workspace', {
     get() { return decrypt(this.getDataValue('jira_api_token')); },
     set(v) { this.setDataValue('jira_api_token', encrypt(v)); },
   },
+  slack_digest_webhook: {
+    type: DataTypes.TEXT, allowNull: true,
+    get() { return decrypt(this.getDataValue('slack_digest_webhook')); },
+    set(v) { this.setDataValue('slack_digest_webhook', encrypt(v)); },
+  },
+  slack_digest_channel: { type: DataTypes.STRING(128), allowNull: true },
+  slack_digest_enabled: { type: DataTypes.BOOLEAN, defaultValue: false },
+  slack_digest_hour: { type: DataTypes.INTEGER, defaultValue: 9 },
   is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
   last_scan_at: { type: DataTypes.DATE, allowNull: true },
   schedule: { type: DataTypes.STRING(50), allowNull: true }, // cron expression

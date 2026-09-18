@@ -19,5 +19,6 @@ router.use('/offboarding', require('./offboarding'));
 router.use('/extension', require('./extension'));
 router.use('/sensitivity', require('./sensitivity'));
 router.use('/vendor-risk', require('./vendorRisk'));
+router.use('/slack-bot', require('./slackBot'));
 
 module.exports = router;

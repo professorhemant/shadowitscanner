@@ -14,6 +14,7 @@ const nav = [
   { to: '/extension', label: 'Extension', icon: '🧩' },
   { to: '/sensitivity', label: 'Data Sensitivity', icon: '🔒' },
   { to: '/vendor-risk', label: 'Vendor Risk', icon: '🏢' },
+  { to: '/slack-bot', label: 'Slack Bot', icon: '💬' },
   { to: '/breaches', label: 'Breach Alerts', icon: '🚨' },
   { to: '/reports', label: 'Reports', icon: '📄' },
   { to: '/connect', label: 'Connect Workspace', icon: '+' },

@@ -105,6 +105,24 @@ async function runMigrations() {
       await qi.addColumn('workspaces', 'jira_api_token', { type: DataTypes.TEXT, allowNull: true });
       console.log('Migration: added workspaces.jira_api_token');
     }
+    if (!wsDesc.slack_digest_webhook) {
+      await qi.addColumn('workspaces', 'slack_digest_webhook', { type: DataTypes.TEXT, allowNull: true });
+      console.log('Migration: added workspaces.slack_digest_webhook');
+    }
+    if (!wsDesc.slack_digest_channel) {
+      await qi.addColumn('workspaces', 'slack_digest_channel', { type: DataTypes.STRING(128), allowNull: true });
+      console.log('Migration: added workspaces.slack_digest_channel');
+    }
+    if (!wsDesc.slack_digest_enabled) {
+      await qi.addColumn('workspaces', 'slack_digest_enabled', { type: DataTypes.BOOLEAN, defaultValue: false, allowNull: true });
+      await sequelize.query(`UPDATE workspaces SET slack_digest_enabled = false WHERE slack_digest_enabled IS NULL`);
+      console.log('Migration: added workspaces.slack_digest_enabled');
+    }
+    if (!wsDesc.slack_digest_hour) {
+      await qi.addColumn('workspaces', 'slack_digest_hour', { type: DataTypes.INTEGER, defaultValue: 9, allowNull: true });
+      await sequelize.query(`UPDATE workspaces SET slack_digest_hour = 9 WHERE slack_digest_hour IS NULL`);
+      console.log('Migration: added workspaces.slack_digest_hour');
+    }
   }
 
   // ── discovered_apps ──────────────────────────────────────────────────────
