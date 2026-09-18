@@ -53,9 +53,21 @@ async function runMigrations() {
       await qi.addColumn('workspaces', 'ms_client_secret', { type: DataTypes.TEXT, allowNull: true });
       console.log('Migration: added workspaces.ms_client_secret');
     }
+    if (!wsDesc.okta_domain) {
+      await qi.addColumn('workspaces', 'okta_domain', { type: DataTypes.STRING(255), allowNull: true });
+      console.log('Migration: added workspaces.okta_domain');
+    }
+    if (!wsDesc.okta_api_token) {
+      await qi.addColumn('workspaces', 'okta_api_token', { type: DataTypes.TEXT, allowNull: true });
+      console.log('Migration: added workspaces.okta_api_token');
+    }
     try {
       await sequelize.query(`ALTER TYPE "enum_workspaces_type" ADD VALUE IF NOT EXISTS 'microsoft'`);
       console.log('Migration: added microsoft to workspaces.type enum');
+    } catch (e) { /* already exists */ }
+    try {
+      await sequelize.query(`ALTER TYPE "enum_workspaces_type" ADD VALUE IF NOT EXISTS 'okta'`);
+      console.log('Migration: added okta to workspaces.type enum');
     } catch (e) { /* already exists */ }
   }
 
@@ -74,6 +86,17 @@ async function runMigrations() {
     try {
       await sequelize.query(`ALTER TYPE "enum_discovered_apps_source" ADD VALUE IF NOT EXISTS 'microsoft'`);
       console.log('Migration: added microsoft to discovered_apps.source enum');
+    } catch (e) { /* already exists */ }
+    try {
+      await sequelize.query(`ALTER TYPE "enum_discovered_apps_source" ADD VALUE IF NOT EXISTS 'okta'`);
+      console.log('Migration: added okta to discovered_apps.source enum');
+    } catch (e) { /* already exists */ }
+
+    // WhitelistedApp source enum
+    try {
+      await sequelize.query(`ALTER TYPE "enum_whitelisted_apps_source" ADD VALUE IF NOT EXISTS 'microsoft'`);
+      await sequelize.query(`ALTER TYPE "enum_whitelisted_apps_source" ADD VALUE IF NOT EXISTS 'okta'`);
+      console.log('Migration: updated whitelisted_apps.source enum');
     } catch (e) { /* already exists */ }
   }
 

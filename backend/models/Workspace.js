@@ -8,7 +8,7 @@ const Workspace = sequelize.define('Workspace', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   user_id: { type: DataTypes.UUID, allowNull: false },
   name: { type: DataTypes.STRING(255), allowNull: false },
-  type: { type: DataTypes.ENUM('slack', 'google', 'microsoft'), allowNull: false },
+  type: { type: DataTypes.ENUM('slack', 'google', 'microsoft', 'okta'), allowNull: false },
   slack_team_id: { type: DataTypes.STRING(128), allowNull: true },
   slack_bot_token: {
     type: DataTypes.TEXT, allowNull: true,
@@ -33,6 +33,12 @@ const Workspace = sequelize.define('Workspace', {
     type: DataTypes.TEXT, allowNull: true,
     get() { return decrypt(this.getDataValue('ms_client_secret')); },
     set(v) { this.setDataValue('ms_client_secret', encrypt(v)); },
+  },
+  okta_domain: { type: DataTypes.STRING(255), allowNull: true },
+  okta_api_token: {
+    type: DataTypes.TEXT, allowNull: true,
+    get() { return decrypt(this.getDataValue('okta_api_token')); },
+    set(v) { this.setDataValue('okta_api_token', encrypt(v)); },
   },
   is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
   last_scan_at: { type: DataTypes.DATE, allowNull: true },

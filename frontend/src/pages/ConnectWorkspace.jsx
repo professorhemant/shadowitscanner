@@ -7,6 +7,7 @@ const TABS = [
   { id: 'slack',     label: '💬 Slack' },
   { id: 'google',    label: '📁 Google Workspace' },
   { id: 'microsoft', label: '🪟 Microsoft 365' },
+  { id: 'okta',      label: '🔐 Okta' },
 ];
 
 export default function ConnectWorkspace() {
@@ -16,6 +17,7 @@ export default function ConnectWorkspace() {
     slack_bot_token: '', slack_user_token: '',
     google_domain: '', google_admin_email: '',
     ms_tenant_id: '', ms_client_id: '', ms_client_secret: '',
+    okta_domain: '', okta_api_token: '',
   });
   const [saFile, setSaFile] = useState(null);
   const [error, setError] = useState('');
@@ -133,6 +135,33 @@ export default function ConnectWorkspace() {
                 placeholder="Your app's client secret value"
                 className="w-full bg-slate-800 border border-surface-border rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500" />
               <p className="text-xs text-slate-600 mt-1">Stored encrypted. Scans all OAuth apps authorized by users in your tenant.</p>
+            </div>
+          </>
+        )}
+
+        {type === 'okta' && (
+          <>
+            <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg px-4 py-3 text-xs text-orange-300 space-y-1">
+              <p className="font-medium">Setup required in Okta Admin Console:</p>
+              <ol className="list-decimal list-inside space-y-0.5 text-orange-400">
+                <li>Go to <strong>Security → API → Tokens</strong></li>
+                <li>Click <strong>Create Token</strong> — name it "ShadowIT Scanner"</li>
+                <li>Copy the token value (shown once only)</li>
+                <li>Your Okta domain is the URL you use to log in (e.g. <code>company.okta.com</code>)</li>
+              </ol>
+            </div>
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Okta Domain <span className="text-slate-600">(without https://)</span></label>
+              <input type="text" value={form.okta_domain} onChange={e => set('okta_domain', e.target.value)} required
+                placeholder="company.okta.com"
+                className="w-full bg-slate-800 border border-surface-border rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500 font-mono" />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">API Token</label>
+              <input type="password" value={form.okta_api_token} onChange={e => set('okta_api_token', e.target.value)} required
+                placeholder="Your Okta API token"
+                className="w-full bg-slate-800 border border-surface-border rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500" />
+              <p className="text-xs text-slate-600 mt-1">Read-only token. Scans all SSO apps (SAML + OIDC + provisioned) in your org.</p>
             </div>
           </>
         )}

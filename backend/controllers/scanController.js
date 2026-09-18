@@ -4,6 +4,7 @@ const { Workspace, ScanRun, DiscoveredApp, WhitelistedApp, AlertConfig } = requi
 const { scanSlack } = require('../services/slackScanner');
 const { scanGoogle } = require('../services/googleScanner');
 const { scanMicrosoft } = require('../services/microsoftScanner');
+const { scanOkta } = require('../services/oktaScanner');
 const { sendAlertEmail } = require('../services/emailService');
 
 async function persistScanResults(workspaceId, source, apps, triggeredBy, scanRunId) {
@@ -82,6 +83,9 @@ async function triggerScan(req, res, next) {
           apps = result.apps;
         } else if (ws.type === 'microsoft' || source === 'microsoft') {
           const result = await scanMicrosoft(ws);
+          apps = result.apps;
+        } else if (ws.type === 'okta' || source === 'okta') {
+          const result = await scanOkta(ws);
           apps = result.apps;
         }
 

@@ -125,6 +125,29 @@ const MICROSOFT_SCOPE_WEIGHTS = {
   'offline_access': 4,
 };
 
+// Okta app feature / sign-on mode weight table
+const OKTA_SCOPE_WEIGHTS = {
+  // Provisioning features (SCIM — can create/deactivate users in target app)
+  'USER_PROVISIONING': 35,
+  'PUSH_NEW_USERS': 28,
+  'PUSH_USER_DEACTIVATION': 30,
+  'REACTIVATE_USERS': 20,
+  'PUSH_PROFILE_UPDATES': 18,
+  'PUSH_GROUPS': 22,
+  'GROUP_PUSH': 22,
+  'IMPORT_NEW_USERS': 20,
+  'IMPORT_PROFILE_UPDATES': 15,
+  'IMPORT_USER_SCHEMA': 12,
+
+  // Sign-on modes
+  'signOnMode:SECURE_PASSWORD_STORE': 18, // password vaulting
+  'signOnMode:AUTO_LOGIN': 15,
+  'signOnMode:BROWSER_PLUGIN': 12,
+  'signOnMode:WS_FEDERATION': 8,
+  'signOnMode:SAML_2_0': 5,
+  'signOnMode:OIDC': 5,
+};
+
 // Google OAuth scope weight table
 const GOOGLE_SCOPE_WEIGHTS = {
   // Super-admin
@@ -219,6 +242,8 @@ const ADMIN_SCOPES = new Set([
   // Microsoft
   'Directory.ReadWrite.All', 'User.ReadWrite.All', 'RoleManagement.ReadWrite.Directory',
   'Application.ReadWrite.All', 'Organization.ReadWrite.All',
+  // Okta
+  'USER_PROVISIONING', 'PUSH_USER_DEACTIVATION', 'PUSH_NEW_USERS',
 ]);
 
 // Scopes that indicate write access
@@ -252,6 +277,7 @@ module.exports = {
   SLACK_SCOPE_WEIGHTS,
   GOOGLE_SCOPE_WEIGHTS,
   MICROSOFT_SCOPE_WEIGHTS,
+  OKTA_SCOPE_WEIGHTS,
   EMAIL_SCOPES,
   CALENDAR_SCOPES,
   DRIVE_SCOPES,

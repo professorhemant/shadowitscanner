@@ -76,6 +76,39 @@ const DEMO_APPS_RAW = [
     is_verified: false, privacy_url: null,
     external_domain: true, user_count: 28,
   },
+  // ── Okta SSO Apps ─────────────────────────────────────────────────────────
+  {
+    source: 'okta', app_id: 'okta-salesforce-sso-demo',
+    app_name: 'Salesforce', app_description: 'SSO type: SAML 2 0', developer: '',
+    developer_url: '', icon_url: '',
+    scopes: ['USER_PROVISIONING', 'PUSH_NEW_USERS', 'PUSH_USER_DEACTIVATION', 'signOnMode:SAML_2_0'],
+    is_verified: true, privacy_url: null,
+    external_domain: true, user_count: 134,
+  },
+  {
+    source: 'okta', app_id: 'okta-workday-demo',
+    app_name: 'Workday', app_description: 'SSO type: SAML 2 0', developer: '',
+    developer_url: '', icon_url: '',
+    scopes: ['USER_PROVISIONING', 'PUSH_USER_DEACTIVATION', 'PUSH_GROUPS', 'signOnMode:SAML_2_0'],
+    is_verified: true, privacy_url: null,
+    external_domain: true, user_count: 87,
+  },
+  {
+    source: 'okta', app_id: 'okta-custom-vpn-demo',
+    app_name: 'custom_internal_vpn', app_description: 'SSO type: AUTO LOGIN', developer: '',
+    developer_url: '', icon_url: '',
+    scopes: ['signOnMode:AUTO_LOGIN'],
+    is_verified: false, privacy_url: null,
+    external_domain: false, user_count: 200,
+  },
+  {
+    source: 'okta', app_id: 'okta-bamboohr-demo',
+    app_name: 'BambooHR', app_description: 'SSO type: SAML 2 0', developer: '',
+    developer_url: '', icon_url: '',
+    scopes: ['USER_PROVISIONING', 'PUSH_NEW_USERS', 'PUSH_PROFILE_UPDATES', 'signOnMode:SAML_2_0'],
+    is_verified: true, privacy_url: null,
+    external_domain: true, user_count: 67,
+  },
   // ── Regular (non-AI) apps ─────────────────────────────────────────────────
   {
     source: 'microsoft', app_id: 'datasync-pro-demo',

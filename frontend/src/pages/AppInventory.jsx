@@ -60,6 +60,7 @@ export default function AppInventory() {
           <option value="slack">Slack</option>
           <option value="google">Google</option>
           <option value="microsoft">Microsoft</option>
+          <option value="okta">Okta</option>
         </select>
         <button
           onClick={() => { setAiOnly(v => !v); setPage(1); }}

@@ -7,7 +7,7 @@ const DiscoveredApp = sequelize.define('DiscoveredApp', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   scan_run_id: { type: DataTypes.UUID, allowNull: false },
   workspace_id: { type: DataTypes.UUID, allowNull: false },
-  source: { type: DataTypes.ENUM('slack', 'google', 'microsoft'), allowNull: false },
+  source: { type: DataTypes.ENUM('slack', 'google', 'microsoft', 'okta'), allowNull: false },
   app_id: { type: DataTypes.STRING(255), allowNull: false },
   app_name: { type: DataTypes.STRING(255), allowNull: false },
   app_description: { type: DataTypes.TEXT, allowNull: true },

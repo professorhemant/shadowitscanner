@@ -1,6 +1,6 @@
 'use strict';
 
-const { SLACK_SCOPE_WEIGHTS, GOOGLE_SCOPE_WEIGHTS, MICROSOFT_SCOPE_WEIGHTS, EMAIL_SCOPES, CALENDAR_SCOPES, DRIVE_SCOPES, ADMIN_SCOPES, WRITE_SCOPES, getRiskLevel } = require('../utils/scoringConstants');
+const { SLACK_SCOPE_WEIGHTS, GOOGLE_SCOPE_WEIGHTS, MICROSOFT_SCOPE_WEIGHTS, OKTA_SCOPE_WEIGHTS, EMAIL_SCOPES, CALENDAR_SCOPES, DRIVE_SCOPES, ADMIN_SCOPES, WRITE_SCOPES, getRiskLevel } = require('../utils/scoringConstants');
 const { detectAITool } = require('./aiToolsRegistry');
 
 function scoreApp(app) {
@@ -8,6 +8,7 @@ function scoreApp(app) {
   const source = app.source;
   const weightTable = source === 'slack' ? SLACK_SCOPE_WEIGHTS
     : source === 'microsoft' ? MICROSOFT_SCOPE_WEIGHTS
+    : source === 'okta' ? OKTA_SCOPE_WEIGHTS
     : GOOGLE_SCOPE_WEIGHTS;
 
   const factors = [];
