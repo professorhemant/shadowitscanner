@@ -49,7 +49,7 @@ async function stats(req, res, next) {
       where: appWhere,
       order: [['risk_score', 'DESC']],
       limit: 5,
-      attributes: ['id', 'app_name', 'source', 'risk_score', 'risk_level', 'is_verified', 'user_count'],
+      attributes: ['id', 'app_name', 'source', 'risk_score', 'risk_level', 'is_verified', 'user_count', 'is_ai_tool'],
     });
 
     res.json({

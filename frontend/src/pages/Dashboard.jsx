@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getDashboardStats } from '../api/dashboard';
 import { listWorkspaces } from '../api/workspaces';
 import { triggerScan } from '../api/scans';
+import { seedDemo } from '../api/demo';
 import { useWorkspaceStore } from '../store/workspaceStore';
 import RiskSummaryCards from '../components/dashboard/RiskSummaryCards';
 import RiskPieChart from '../components/dashboard/RiskPieChart';
@@ -29,6 +30,14 @@ export default function Dashboard() {
     onSuccess: () => setTimeout(() => qc.invalidateQueries(['dashboard']), 3000),
   });
 
+  const demo = useMutation({
+    mutationFn: seedDemo,
+    onSuccess: () => {
+      qc.invalidateQueries(['workspaces']);
+      qc.invalidateQueries(['dashboard']);
+    },
+  });
+
   if (!wsData?.length) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 text-slate-400">
@@ -38,6 +47,19 @@ export default function Dashboard() {
         <Link to="/connect" className="bg-brand-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-brand-500 transition-colors">
           Connect workspace →
         </Link>
+        <div className="flex items-center gap-3 mt-2">
+          <div className="h-px w-16 bg-surface-border"></div>
+          <span className="text-xs text-slate-600">or</span>
+          <div className="h-px w-16 bg-surface-border"></div>
+        </div>
+        <button
+          onClick={() => demo.mutate()}
+          disabled={demo.isPending}
+          className="flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+        >
+          {demo.isPending ? 'Loading…' : '🤖 Try with demo data'}
+        </button>
+        {demo.isSuccess && <p className="text-xs text-green-400">Demo data loaded! Refresh the page.</p>}
       </div>
     );
   }
@@ -58,6 +80,13 @@ export default function Dashboard() {
           >
             {workspaces.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
           </select>
+          <button
+            onClick={() => demo.mutate()}
+            disabled={demo.isPending}
+            className="bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 text-sm px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+          >
+            {demo.isPending ? 'Loading…' : '🤖 Demo data'}
+          </button>
           <button
             onClick={() => scan.mutate()}
             disabled={!activeWorkspace || scan.isPending}
