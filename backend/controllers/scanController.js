@@ -1,11 +1,11 @@
 'use strict';
 
-const { Workspace, ScanRun, DiscoveredApp, WhitelistedApp, AlertConfig } = require('../models');
+const { Workspace, ScanRun, DiscoveredApp, WhitelistedApp, AlertConfig, NudgeLog } = require('../models');
 const { scanSlack } = require('../services/slackScanner');
 const { scanGoogle } = require('../services/googleScanner');
 const { scanMicrosoft } = require('../services/microsoftScanner');
 const { scanOkta } = require('../services/oktaScanner');
-const { sendAlertEmail } = require('../services/emailService');
+const { sendAlertEmail, sendNudgeEmail } = require('../services/emailService');
 
 async function persistScanResults(workspaceId, source, apps, triggeredBy, scanRunId) {
   const counts = { critical: 0, high: 0, medium: 0, low: 0 };
@@ -99,6 +99,24 @@ async function triggerScan(req, res, next) {
           const risky = apps.filter(a => LEVEL_ORDER[a.risk_level] <= threshold);
           if (risky.length > 0) {
             await sendAlertEmail({ recipients: alertCfg.email_recipients, workspaceName: ws.name, newApps: risky });
+          }
+          // Auto-nudge: send per-app nudges for Critical + High apps
+          const nudgeApps = apps.filter(a => a.risk_level === 'critical' || a.risk_level === 'high');
+          for (const a of nudgeApps) {
+            try {
+              await sendNudgeEmail({ recipients: alertCfg.email_recipients, workspaceName: ws.name, app: a });
+              await NudgeLog.create({
+                workspace_id,
+                app_id: a.app_id,
+                app_name: a.app_name,
+                source: a.source,
+                risk_level: a.risk_level,
+                risk_score: a.risk_score,
+                user_count: a.user_count || 0,
+                recipients: alertCfg.email_recipients,
+                nudge_type: 'auto',
+              });
+            } catch (_) {}
           }
         }
       } catch (err) {

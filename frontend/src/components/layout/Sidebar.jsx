@@ -7,6 +7,7 @@ const nav = [
   { to: '/scans', label: 'Scan History', icon: '↺' },
   { to: '/whitelist', label: 'Whitelist', icon: '✓' },
   { to: '/alerts', label: 'Alerts', icon: '🔔' },
+  { to: '/nudges', label: 'Nudges', icon: '📣' },
   { to: '/connect', label: 'Connect Workspace', icon: '+' },
   { to: '/settings', label: 'Settings', icon: '⚙' },
 ];

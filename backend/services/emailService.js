@@ -36,4 +36,125 @@ async function sendAlertEmail({ recipients, workspaceName, newApps }) {
   });
 }
 
-module.exports = { sendAlertEmail };
+const RISK_COLOR = { critical: '#ef4444', high: '#f97316', medium: '#3b82f6', low: '#22c55e' };
+const RISK_BG    = { critical: '#450a0a', high: '#431407', medium: '#172554', low: '#052e16' };
+
+async function sendNudgeEmail({ recipients, workspaceName, app }) {
+  if (!recipients?.length || !process.env.SMTP_HOST) return;
+  const transport = getTransport();
+
+  const color = RISK_COLOR[app.risk_level] || '#94a3b8';
+  const bg    = RISK_BG[app.risk_level]    || '#1e293b';
+
+  const scopeChips = (app.scopes || []).slice(0, 8).map(s =>
+    `<span style="background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 8px;font-size:11px;font-family:monospace;color:#94a3b8;margin:2px;display:inline-block;">${s}</span>`
+  ).join('');
+
+  const riskFactorRows = (app.risk_factors || []).slice(0, 5).map(f =>
+    `<tr><td style="padding:4px 0;font-size:13px;color:#cbd5e1;">• ${f.detail}</td><td style="padding:4px 0 4px 12px;font-size:12px;color:#64748b;white-space:nowrap;">+${f.weight} pts</td></tr>`
+  ).join('');
+
+  const aiSection = (app.is_ai_tool && app.ai_risk_flags) ? `
+    <div style="background:#1a0533;border:1px solid #7c3aed44;border-radius:8px;padding:16px;margin-top:16px;">
+      <div style="font-size:13px;font-weight:600;color:#c4b5fd;margin-bottom:8px;">🤖 AI Tool Risk Flags</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <tr>
+          <td style="padding:3px 0;color:#94a3b8;">Data training clause:</td>
+          <td style="padding:3px 0;color:${app.ai_risk_flags.data_training_clause ? '#f87171' : '#86efac'};font-weight:600;">&nbsp;${app.ai_risk_flags.data_training_clause ? 'Yes — ToS permits training' : 'No'}</td>
+        </tr>
+        <tr>
+          <td style="padding:3px 0;color:#94a3b8;">Trains on your data:</td>
+          <td style="padding:3px 0;color:${app.ai_risk_flags.trains_on_data ? '#f87171' : '#86efac'};font-weight:600;">&nbsp;${app.ai_risk_flags.trains_on_data ? 'Yes' : 'No'}</td>
+        </tr>
+        <tr>
+          <td style="padding:3px 0;color:#94a3b8;">Data retention:</td>
+          <td style="padding:3px 0;color:#e2e8f0;">&nbsp;${app.ai_risk_flags.data_retention || 'Unknown'}</td>
+        </tr>
+        <tr>
+          <td style="padding:3px 0;color:#94a3b8;">Server geography:</td>
+          <td style="padding:3px 0;color:#e2e8f0;">&nbsp;${app.ai_risk_flags.server_geography || 'Unknown'}</td>
+        </tr>
+      </table>
+    </div>` : '';
+
+  const dashboardUrl = process.env.FRONTEND_URL || 'https://shadowit.app';
+
+  await transport.sendMail({
+    from: process.env.ALERT_FROM_EMAIL || 'noreply@shadowit.app',
+    to: recipients.join(', '),
+    subject: `📣 Shadow IT Nudge — ${app.app_name} (${app.risk_level.toUpperCase()}) in ${workspaceName}`,
+    html: `
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:560px;margin:32px auto;background:#1e293b;border-radius:12px;border:1px solid #334155;overflow:hidden;">
+
+    <!-- Header -->
+    <div style="background:#0f172a;padding:20px 24px;border-bottom:1px solid #334155;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:22px;">🛡️</span>
+        <span style="color:#e2e8f0;font-weight:700;font-size:16px;">Shadow IT Scanner</span>
+      </div>
+    </div>
+
+    <!-- App Hero -->
+    <div style="padding:24px;">
+      <div style="background:${bg};border:1px solid ${color}44;border-radius:10px;padding:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div style="font-size:20px;font-weight:700;color:#f1f5f9;">${app.app_name}</div>
+            <div style="font-size:13px;color:#94a3b8;margin-top:2px;text-transform:capitalize;">${app.source} · ${app.developer || 'Unknown developer'}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="background:${color}22;border:1px solid ${color}55;color:${color};font-weight:700;font-size:12px;text-transform:uppercase;padding:4px 12px;border-radius:20px;">${app.risk_level}</div>
+            <div style="font-size:26px;font-weight:800;color:${color};margin-top:4px;">${app.risk_score}<span style="font-size:14px;font-weight:500;color:#64748b;">/100</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Why risky -->
+      ${riskFactorRows ? `
+      <div style="margin-top:20px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#64748b;margin-bottom:8px;">Why is this risky?</div>
+        <table style="width:100%;border-collapse:collapse;">${riskFactorRows}</table>
+      </div>` : ''}
+
+      <!-- Scopes -->
+      ${scopeChips ? `
+      <div style="margin-top:16px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#64748b;margin-bottom:8px;">OAuth Scopes Granted</div>
+        <div>${scopeChips}</div>
+      </div>` : ''}
+
+      <!-- Stats -->
+      <div style="display:flex;gap:12px;margin-top:16px;">
+        <div style="flex:1;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:#f1f5f9;">${app.user_count}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">Users authorized</div>
+        </div>
+        <div style="flex:1;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:20px;font-weight:700;color:${app.is_verified ? '#22c55e' : '#ef4444'};">${app.is_verified ? '✔' : '✖'}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">Publisher verified</div>
+        </div>
+      </div>
+
+      ${aiSection}
+
+      <!-- CTA -->
+      <div style="margin-top:24px;text-align:center;">
+        <a href="${dashboardUrl}/apps" style="display:inline-block;background:#6366f1;color:#ffffff;font-weight:600;font-size:14px;padding:12px 28px;border-radius:8px;text-decoration:none;">
+          Review in Dashboard →
+        </a>
+      </div>
+
+      <p style="font-size:11px;color:#475569;text-align:center;margin-top:16px;">
+        This nudge was sent from <strong>${workspaceName}</strong> via Shadow IT Scanner.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`,
+  });
+}
+
+module.exports = { sendAlertEmail, sendNudgeEmail };

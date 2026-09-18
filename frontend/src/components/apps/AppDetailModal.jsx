@@ -1,4 +1,8 @@
+import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import RiskBadge from './RiskBadge';
+import { sendNudge } from '../../api/nudges';
+import { useWorkspaceStore } from '../../store/workspaceStore';
 
 function AIFlag({ label, value, bad }) {
   return (
@@ -10,6 +14,14 @@ function AIFlag({ label, value, bad }) {
 }
 
 export default function AppDetailModal({ app, onClose, onWhitelist }) {
+  const { activeWorkspace } = useWorkspaceStore();
+  const [nudgeSent, setNudgeSent] = useState(false);
+
+  const nudgeMutation = useMutation({
+    mutationFn: () => sendNudge({ workspace_id: activeWorkspace?.id, app_id: app.app_id }),
+    onSuccess: () => setNudgeSent(true),
+  });
+
   if (!app) return null;
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -99,17 +111,27 @@ export default function AppDetailModal({ app, onClose, onWhitelist }) {
           )}
         </div>
 
-        {!app.is_whitelisted && (
-          <div className="px-6 py-4 border-t border-surface-border flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-surface-border flex items-center justify-between gap-3">
+          <button
+            onClick={() => { if (!nudgeSent) nudgeMutation.mutate(); }}
+            disabled={nudgeMutation.isPending || nudgeSent}
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg font-medium transition-colors ${nudgeSent ? 'bg-blue-600/20 text-blue-300 cursor-default' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'} disabled:opacity-50`}
+            title="Send nudge email to IT team about this app"
+          >
+            {nudgeSent ? '✓ Nudge sent' : nudgeMutation.isPending ? 'Sending…' : '📣 Send Nudge'}
+          </button>
+          <div className="flex gap-3">
             <button onClick={onClose} className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors">Cancel</button>
-            <button
-              onClick={() => onWhitelist(app)}
-              className="px-4 py-2 text-sm bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium transition-colors"
-            >
-              Approve & Whitelist
-            </button>
+            {!app.is_whitelisted && (
+              <button
+                onClick={() => onWhitelist(app)}
+                className="px-4 py-2 text-sm bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium transition-colors"
+              >
+                Approve & Whitelist
+              </button>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ import ScanHistory from './pages/ScanHistory';
 import Whitelist from './pages/Whitelist';
 import Alerts from './pages/Alerts';
 import Settings from './pages/Settings';
+import Nudges from './pages/Nudges';
 
 export default function App() {
   const { token, setAuth, logout } = useAuthStore();
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/whitelist" element={<Whitelist />} />
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/nudges" element={<Nudges />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

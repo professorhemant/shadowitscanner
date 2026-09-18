@@ -10,5 +10,6 @@ router.use('/dashboard', require('./dashboard'));
 router.use('/alerts', require('./alerts'));
 router.use('/cli', require('./cli'));
 router.use('/demo', require('./demo'));
+router.use('/nudges', require('./nudge'));
 
 module.exports = router;

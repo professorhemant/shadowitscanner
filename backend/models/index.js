@@ -8,6 +8,7 @@ const DiscoveredApp = require('./DiscoveredApp');
 const WhitelistedApp = require('./WhitelistedApp');
 const AlertConfig = require('./AlertConfig');
 const TeamMember = require('./TeamMember');
+const NudgeLog = require('./NudgeLog');
 
 // Associations
 User.hasMany(Workspace, { foreignKey: 'user_id', onDelete: 'CASCADE' });
@@ -33,6 +34,9 @@ TeamMember.belongsTo(Workspace, { foreignKey: 'workspace_id' });
 
 User.hasMany(TeamMember, { foreignKey: 'user_id' });
 TeamMember.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
+Workspace.hasMany(NudgeLog, { foreignKey: 'workspace_id', onDelete: 'CASCADE' });
+NudgeLog.belongsTo(Workspace, { foreignKey: 'workspace_id' });
 
 async function runMigrations() {
   const { DataTypes } = require('sequelize');
@@ -100,6 +104,13 @@ async function runMigrations() {
     } catch (e) { /* already exists */ }
   }
 
+  // ── nudge_logs ───────────────────────────────────────────────────────────
+  const nudgeDesc = await qi.describeTable('nudge_logs').catch(() => null);
+  if (!nudgeDesc) {
+    await NudgeLog.sync({ force: false });
+    console.log('Migration: created nudge_logs table');
+  }
+
   console.log('Migrations complete');
 }
 
@@ -109,4 +120,4 @@ async function syncDB() {
   console.log('Database synced');
 }
 
-module.exports = { sequelize, syncDB, User, Workspace, ScanRun, DiscoveredApp, WhitelistedApp, AlertConfig, TeamMember };
+module.exports = { sequelize, syncDB, User, Workspace, ScanRun, DiscoveredApp, WhitelistedApp, AlertConfig, TeamMember, NudgeLog };
