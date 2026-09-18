@@ -13,5 +13,6 @@ router.use('/demo', require('./demo'));
 router.use('/nudges', require('./nudge'));
 router.use('/approvals', require('./approvals'));
 router.use('/spend', require('./spend'));
+router.use('/reports', require('./reports'));
 
 module.exports = router;
