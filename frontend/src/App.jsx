@@ -23,6 +23,7 @@ import Breaches from './pages/Breaches';
 import Offboarding from './pages/Offboarding';
 import Extension from './pages/Extension';
 import Sensitivity from './pages/Sensitivity';
+import VendorRisk from './pages/VendorRisk';
 
 export default function App() {
   const { token, setAuth, logout } = useAuthStore();
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="/offboarding" element={<Offboarding />} />
           <Route path="/extension" element={<Extension />} />
           <Route path="/sensitivity" element={<Sensitivity />} />
+          <Route path="/vendor-risk" element={<VendorRisk />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

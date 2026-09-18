@@ -18,5 +18,6 @@ router.use('/breaches', require('./breaches'));
 router.use('/offboarding', require('./offboarding'));
 router.use('/extension', require('./extension'));
 router.use('/sensitivity', require('./sensitivity'));
+router.use('/vendor-risk', require('./vendorRisk'));
 
 module.exports = router;
