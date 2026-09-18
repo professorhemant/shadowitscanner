@@ -17,6 +17,7 @@ const nav = [
   { to: '/slack-bot', label: 'Slack Bot', icon: '💬' },
   { to: '/webhooks', label: 'Webhooks', icon: '🔗' },
   { to: '/auto-scan', label: 'Auto-Scan', icon: '⚡' },
+  { to: '/analytics', label: 'Analytics', icon: '📊' },
   { to: '/breaches', label: 'Breach Alerts', icon: '🚨' },
   { to: '/reports', label: 'Reports', icon: '📄' },
   { to: '/connect', label: 'Connect Workspace', icon: '+' },
