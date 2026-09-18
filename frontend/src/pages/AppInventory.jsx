@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { listApps, whitelistApp, removeWhitelist } from '../api/apps';
+import { listApps, whitelistApp, removeWhitelist, exportAppsCsv } from '../api/apps';
 import { useWorkspaceStore } from '../store/workspaceStore';
 import RiskBadge from '../components/apps/RiskBadge';
 import AppDetailModal from '../components/apps/AppDetailModal';
@@ -15,7 +15,26 @@ export default function AppInventory() {
   const [aiOnly, setAiOnly] = useState(false);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
+  const [exporting, setExporting] = useState(false);
   const qc = useQueryClient();
+
+  async function handleExport() {
+    if (!activeWorkspace?.id || exporting) return;
+    setExporting(true);
+    try {
+      const res = await exportAppsCsv(activeWorkspace.id);
+      const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const cd = res.headers?.['content-disposition'] || '';
+      a.download = cd.match(/filename="(.+?)"/)?.[1] || 'shadow-it-export.csv';
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch { /* silent */ } finally { setExporting(false); }
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ['apps', activeWorkspace?.id, search, riskFilter, sourceFilter, aiOnly, page],
@@ -38,7 +57,16 @@ export default function AppInventory() {
     <div className="p-6 space-y-5 max-w-6xl">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white">App Inventory</h1>
-        <span className="text-slate-400 text-sm">{data?.total ?? '…'} total apps</span>
+        <div className="flex items-center gap-3">
+          <span className="text-slate-400 text-sm">{data?.total ?? '…'} total apps</span>
+          <button
+            onClick={handleExport}
+            disabled={exporting || !activeWorkspace?.id}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-surface-card border border-surface-border text-slate-300 hover:border-brand-500 hover:text-white rounded-lg disabled:opacity-50 transition-colors"
+          >
+            {exporting ? '⟳ Exporting…' : '⬇ Export CSV'}
+          </button>
+        </div>
       </div>
 
       {/* Filters */}

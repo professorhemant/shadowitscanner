@@ -92,4 +92,71 @@ async function removeWhitelist(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { list, whitelist, removeWhitelist };
+async function exportCsv(req, res, next) {
+  try {
+    const { workspace_id } = req.query;
+    if (!workspace_id) return res.status(400).json({ message: 'workspace_id required' });
+    const ws = await Workspace.findOne({ where: { id: workspace_id, user_id: req.user.id } });
+    if (!ws) return res.status(404).json({ message: 'Workspace not found' });
+
+    const { sequelize, PolicyRule } = require('../models');
+    const { QueryTypes } = require('sequelize');
+
+    const apps = await sequelize.query(
+      `SELECT DISTINCT ON (app_id) app_id, app_name, developer, source, risk_level, risk_score,
+              is_ai_tool, has_admin_scope, has_write_scope, accesses_email, accesses_calendar,
+              accesses_drive, external_domain, user_count, is_verified, scopes,
+              first_seen_at, last_seen_at
+       FROM discovered_apps WHERE workspace_id = :wsId
+       ORDER BY app_id, created_at DESC`,
+      { replacements: { wsId: workspace_id }, type: QueryTypes.SELECT }
+    );
+
+    const rules = await PolicyRule.findAll({
+      where: { workspace_id, enabled: true },
+      order: [['priority', 'DESC'], ['created_at', 'ASC']],
+    });
+    const wl = await WhitelistedApp.findAll({ where: { workspace_id } });
+    const wlSet = new Set(wl.map(w => `${w.app_id}:${w.source}`));
+
+    const processed = apps.map(app => {
+      const base = { ...app, is_whitelisted: wlSet.has(`${app.app_id}:${app.source}`) };
+      return rules.length ? applyRules(base, rules) : { ...base, policy_flags: [] };
+    });
+    processed.sort((a, b) => b.risk_score - a.risk_score);
+
+    function esc(v) {
+      if (v == null) return '';
+      const s = String(v);
+      return (s.includes(',') || s.includes('"') || s.includes('\n'))
+        ? `"${s.replace(/"/g, '""')}"` : s;
+    }
+
+    const headers = [
+      'App Name','Developer','Source','Risk Level','Risk Score','Is AI Tool',
+      'Has Admin Scope','Accesses Email','Accesses Drive','User Count',
+      'Is Verified','Is Whitelisted','Policy Flags','OAuth Scopes','First Seen','Last Seen',
+    ];
+
+    const rows = processed.map(a => [
+      a.app_name, a.developer || '', a.source, a.risk_level, a.risk_score,
+      a.is_ai_tool ? 'Yes' : 'No', a.has_admin_scope ? 'Yes' : 'No',
+      a.accesses_email ? 'Yes' : 'No', a.accesses_drive ? 'Yes' : 'No',
+      a.user_count || 0, a.is_verified ? 'Yes' : 'No', a.is_whitelisted ? 'Yes' : 'No',
+      (a.policy_flags || []).join('; '),
+      (Array.isArray(a.scopes) ? a.scopes : []).join('; '),
+      a.first_seen_at ? new Date(a.first_seen_at).toISOString().slice(0, 10) : '',
+      a.last_seen_at  ? new Date(a.last_seen_at).toISOString().slice(0, 10)  : '',
+    ].map(esc).join(','));
+
+    const csv = [headers.map(esc).join(','), ...rows].join('\r\n');
+    const slug = ws.name.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+    const date = new Date().toISOString().slice(0, 10);
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="shadow-it-${slug}-${date}.csv"`);
+    res.send('﻿' + csv); // BOM for Excel UTF-8
+  } catch (err) { next(err); }
+}
+
+module.exports = { list, whitelist, removeWhitelist, exportCsv };
