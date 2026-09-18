@@ -214,6 +214,13 @@ async function runMigrations() {
     console.log('Migration: updated scan_runs enums');
   }
 
+  // ── team_members ─────────────────────────────────────────────────────────
+  const teamDesc = await qi.describeTable('team_members').catch(() => null);
+  if (teamDesc && !teamDesc.invite_token) {
+    await qi.addColumn('team_members', 'invite_token', { type: DataTypes.STRING(64), allowNull: true });
+    console.log('Migration: added team_members.invite_token');
+  }
+
   // ── nudge_logs ───────────────────────────────────────────────────────────
   const nudgeDesc = await qi.describeTable('nudge_logs').catch(() => null);
   if (!nudgeDesc) {

@@ -11,6 +11,7 @@ const TeamMember = sequelize.define('TeamMember', {
   email: { type: DataTypes.STRING(255), allowNull: false },
   role: { type: DataTypes.ENUM('admin', 'viewer'), defaultValue: 'viewer' },
   status: { type: DataTypes.ENUM('pending', 'active', 'revoked'), defaultValue: 'pending' },
+  invite_token: { type: DataTypes.STRING(64), allowNull: true },
   invited_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
   accepted_at: { type: DataTypes.DATE, allowNull: true },
 }, {

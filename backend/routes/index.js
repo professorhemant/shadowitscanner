@@ -23,5 +23,6 @@ router.use('/slack-bot', require('./slackBot'));
 router.use('/webhooks', require('./webhooks'));
 router.use('/schedule', require('./schedule'));
 router.use('/analytics', require('./analytics'));
+router.use('/team', require('./team'));
 
 module.exports = router;
