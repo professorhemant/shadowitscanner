@@ -12,17 +12,19 @@ export default function AppInventory() {
   const [search, setSearch] = useState('');
   const [riskFilter, setRiskFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
+  const [aiOnly, setAiOnly] = useState(false);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['apps', activeWorkspace?.id, search, riskFilter, sourceFilter, page],
+    queryKey: ['apps', activeWorkspace?.id, search, riskFilter, sourceFilter, aiOnly, page],
     queryFn: () => listApps({
       workspace_id: activeWorkspace?.id,
       search: search || undefined,
       risk_level: riskFilter || undefined,
       source: sourceFilter || undefined,
+      is_ai_tool: aiOnly ? 'true' : undefined,
       page, limit: 50, sort: 'risk_score', order: 'DESC',
     }).then(r => r.data),
   });
@@ -40,7 +42,7 @@ export default function AppInventory() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 items-center">
         <input
           placeholder="Search apps…"
           value={search}
@@ -57,7 +59,14 @@ export default function AppInventory() {
           <option value="">All sources</option>
           <option value="slack">Slack</option>
           <option value="google">Google</option>
+          <option value="microsoft">Microsoft</option>
         </select>
+        <button
+          onClick={() => { setAiOnly(v => !v); setPage(1); }}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${aiOnly ? 'bg-purple-600/20 border-purple-500/40 text-purple-300' : 'bg-surface-card border-surface-border text-slate-400 hover:border-slate-500'}`}
+        >
+          <span>🤖</span> AI Tools {aiOnly && <span className="bg-purple-500/30 text-purple-200 text-xs px-1.5 py-0.5 rounded">ON</span>}
+        </button>
       </div>
 
       {/* Table */}
@@ -79,7 +88,10 @@ export default function AppInventory() {
               <tr key={app.id} className="border-b border-surface-border/50 hover:bg-slate-700/20 cursor-pointer"
                 onClick={() => setSelected(app)}>
                 <td className="px-4 py-3">
-                  <div className="font-medium text-slate-200 truncate max-w-[200px]">{app.app_name}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-slate-200 truncate max-w-[180px]">{app.app_name}</span>
+                    {app.is_ai_tool && <span className="shrink-0 text-xs bg-purple-600/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 rounded font-medium">AI</span>}
+                  </div>
                   {app.is_whitelisted && <span className="text-xs text-green-400">✓ whitelisted</span>}
                 </td>
                 <td className="px-4 py-3 text-slate-400 capitalize">{app.source}</td>

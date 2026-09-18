@@ -5,7 +5,7 @@ const { DiscoveredApp, WhitelistedApp, Workspace } = require('../models');
 
 async function list(req, res, next) {
   try {
-    const { workspace_id, risk_level, source, search, page = 1, limit = 50, sort = 'risk_score', order = 'DESC' } = req.query;
+    const { workspace_id, risk_level, source, search, is_ai_tool, page = 1, limit = 50, sort = 'risk_score', order = 'DESC' } = req.query;
 
     // Verify ownership
     if (workspace_id) {
@@ -18,6 +18,7 @@ async function list(req, res, next) {
     if (risk_level) where.risk_level = risk_level;
     if (source) where.source = source;
     if (search) where.app_name = { [Op.iLike]: `%${search}%` };
+    if (is_ai_tool === 'true') where.is_ai_tool = true;
 
     const allowedSort = ['risk_score', 'app_name', 'last_seen_at', 'user_count'];
     const safeSort = allowedSort.includes(sort) ? sort : 'risk_score';

@@ -45,6 +45,8 @@ async function persistScanResults(workspaceId, source, apps, triggeredBy, scanRu
       accesses_drive: !!a.accesses_drive,
       external_domain: !!a.external_domain,
       user_count: a.user_count || 0,
+      is_ai_tool: !!a.is_ai_tool,
+      ai_risk_flags: a.ai_risk_flags || null,
       first_seen_at: a.first_seen_at || new Date(),
       last_seen_at: a.last_seen_at || new Date(),
     })),

@@ -1,5 +1,14 @@
 import RiskBadge from './RiskBadge';
 
+function AIFlag({ label, value, bad }) {
+  return (
+    <div className={`rounded-lg p-2.5 ${bad ? 'bg-red-900/30 border border-red-500/20' : 'bg-slate-800/60'}`}>
+      <div className="text-slate-500 text-xs mb-0.5">{label}</div>
+      <div className={`font-medium text-xs ${bad ? 'text-red-300' : 'text-slate-300'}`}>{value}</div>
+    </div>
+  );
+}
+
 export default function AppDetailModal({ app, onClose, onWhitelist }) {
   if (!app) return null;
   return (
@@ -53,6 +62,41 @@ export default function AppDetailModal({ app, onClose, onWhitelist }) {
               </div>
             ))}
           </div>
+
+          {app.is_ai_tool && app.ai_risk_flags && (
+            <div className="bg-purple-900/20 border border-purple-500/25 rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🤖</span>
+                <h3 className="text-sm font-semibold text-purple-300">AI Tool — Risk Analysis</h3>
+                <span className="text-xs bg-purple-600/30 text-purple-300 px-2 py-0.5 rounded">{app.ai_risk_flags.category}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <AIFlag
+                  label="Data Training Clause"
+                  value={app.ai_risk_flags.data_training_clause ? 'Yes — ToS permits' : 'No'}
+                  bad={app.ai_risk_flags.data_training_clause}
+                />
+                <AIFlag
+                  label="Trains on Your Data"
+                  value={app.ai_risk_flags.trains_on_data ? 'Yes' : 'No'}
+                  bad={app.ai_risk_flags.trains_on_data}
+                />
+                <AIFlag
+                  label="Data Retention"
+                  value={app.ai_risk_flags.data_retention}
+                  bad={app.ai_risk_flags.data_retention === 'Unknown' || app.ai_risk_flags.data_retention === 'Account lifetime'}
+                />
+                <AIFlag
+                  label="Server Geography"
+                  value={app.ai_risk_flags.server_geography}
+                  bad={false}
+                />
+              </div>
+              {app.ai_risk_flags.notes && (
+                <p className="text-xs text-purple-300/70 leading-relaxed border-t border-purple-500/20 pt-2">{app.ai_risk_flags.notes}</p>
+              )}
+            </div>
+          )}
         </div>
 
         {!app.is_whitelisted && (
