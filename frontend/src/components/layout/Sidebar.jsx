@@ -12,6 +12,7 @@ const nav = [
   { to: '/spend', label: 'Spend Estimator', icon: '💰' },
   { to: '/offboarding', label: 'Offboarding', icon: '🚪' },
   { to: '/extension', label: 'Extension', icon: '🧩' },
+  { to: '/sensitivity', label: 'Data Sensitivity', icon: '🔒' },
   { to: '/breaches', label: 'Breach Alerts', icon: '🚨' },
   { to: '/reports', label: 'Reports', icon: '📄' },
   { to: '/connect', label: 'Connect Workspace', icon: '+' },

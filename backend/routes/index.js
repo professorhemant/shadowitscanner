@@ -17,5 +17,6 @@ router.use('/reports', require('./reports'));
 router.use('/breaches', require('./breaches'));
 router.use('/offboarding', require('./offboarding'));
 router.use('/extension', require('./extension'));
+router.use('/sensitivity', require('./sensitivity'));
 
 module.exports = router;
