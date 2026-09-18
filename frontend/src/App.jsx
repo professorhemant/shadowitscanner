@@ -17,6 +17,7 @@ import Settings from './pages/Settings';
 import Nudges from './pages/Nudges';
 import Approvals from './pages/Approvals';
 import RequestApproval from './pages/RequestApproval';
+import SpendEstimator from './pages/SpendEstimator';
 
 export default function App() {
   const { token, setAuth, logout } = useAuthStore();
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/nudges" element={<Nudges />} />
           <Route path="/approvals" element={<Approvals />} />
+          <Route path="/spend" element={<SpendEstimator />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
