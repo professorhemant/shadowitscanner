@@ -1,4 +1,4 @@
-import api from './index';
+import api from './client';
 
 export function downloadReport(workspaceId) {
   return api.get('/reports/generate', {
