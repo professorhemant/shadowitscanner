@@ -30,6 +30,7 @@ import AutoScan from './pages/AutoScan';
 import Analytics from './pages/Analytics';
 import Team from './pages/Team';
 import Policies from './pages/Policies';
+import ApiKeys from './pages/ApiKeys';
 
 export default function App() {
   const { token, setAuth, logout } = useAuthStore();
@@ -70,6 +71,7 @@ export default function App() {
           <Route path="/team" element={<Team />} />
           <Route path="/invite/accept" element={<Team />} />
           <Route path="/policies" element={<Policies />} />
+          <Route path="/api-keys" element={<ApiKeys />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

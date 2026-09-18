@@ -16,6 +16,7 @@ const nav = [
   { to: '/vendor-risk', label: 'Vendor Risk', icon: '🏢' },
   { to: '/slack-bot', label: 'Slack Bot', icon: '💬' },
   { to: '/webhooks', label: 'Webhooks', icon: '🔗' },
+  { to: '/api-keys', label: 'API Keys', icon: '🔑' },
   { to: '/auto-scan', label: 'Auto-Scan', icon: '⚡' },
   { to: '/analytics', label: 'Analytics', icon: '📊' },
   { to: '/team', label: 'Team', icon: '👥' },

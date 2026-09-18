@@ -25,5 +25,6 @@ router.use('/schedule', require('./schedule'));
 router.use('/analytics', require('./analytics'));
 router.use('/team', require('./team'));
 router.use('/policies', require('./policies'));
+router.use('/apikeys', require('./apikeys'));
 
 module.exports = router;
