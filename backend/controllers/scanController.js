@@ -5,6 +5,8 @@ const { scanSlack } = require('../services/slackScanner');
 const { scanGoogle } = require('../services/googleScanner');
 const { scanMicrosoft } = require('../services/microsoftScanner');
 const { scanOkta } = require('../services/oktaScanner');
+const { scanGithub } = require('../services/githubScanner');
+const { scanJira } = require('../services/jiraScanner');
 const { sendAlertEmail, sendNudgeEmail } = require('../services/emailService');
 
 async function persistScanResults(workspaceId, source, apps, triggeredBy, scanRunId) {
@@ -86,6 +88,12 @@ async function triggerScan(req, res, next) {
           apps = result.apps;
         } else if (ws.type === 'okta' || source === 'okta') {
           const result = await scanOkta(ws);
+          apps = result.apps;
+        } else if (ws.type === 'github' || source === 'github') {
+          const result = await scanGithub(ws);
+          apps = result.apps;
+        } else if (ws.type === 'jira' || source === 'jira') {
+          const result = await scanJira(ws);
           apps = result.apps;
         }
 

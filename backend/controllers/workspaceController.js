@@ -17,14 +17,20 @@ async function create(req, res, next) {
     const { name, type, slack_team_id, slack_bot_token, slack_user_token,
             google_domain, google_service_account, google_admin_email,
             ms_tenant_id, ms_client_id, ms_client_secret,
-            okta_domain, okta_api_token, schedule } = req.body;
+            okta_domain, okta_api_token,
+            github_org, github_pat,
+            jira_domain, jira_email, jira_api_token,
+            schedule } = req.body;
 
     const workspace = await Workspace.create({
       user_id: req.user.id, name, type,
       slack_team_id, slack_bot_token, slack_user_token,
       google_domain, google_service_account, google_admin_email,
       ms_tenant_id, ms_client_id, ms_client_secret,
-      okta_domain, okta_api_token, schedule,
+      okta_domain, okta_api_token,
+      github_org, github_pat,
+      jira_domain, jira_email, jira_api_token,
+      schedule,
     });
 
     res.status(201).json({
@@ -45,6 +51,8 @@ async function update(req, res, next) {
                      'google_service_account', 'google_admin_email',
                      'ms_tenant_id', 'ms_client_id', 'ms_client_secret',
                      'okta_domain', 'okta_api_token',
+                     'github_org', 'github_pat',
+                     'jira_domain', 'jira_email', 'jira_api_token',
                      'schedule', 'is_active'];
     for (const key of allowed) {
       if (req.body[key] !== undefined) ws[key] = req.body[key];

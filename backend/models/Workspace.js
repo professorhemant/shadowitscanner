@@ -8,7 +8,7 @@ const Workspace = sequelize.define('Workspace', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   user_id: { type: DataTypes.UUID, allowNull: false },
   name: { type: DataTypes.STRING(255), allowNull: false },
-  type: { type: DataTypes.ENUM('slack', 'google', 'microsoft', 'okta'), allowNull: false },
+  type: { type: DataTypes.ENUM('slack', 'google', 'microsoft', 'okta', 'github', 'jira'), allowNull: false },
   slack_team_id: { type: DataTypes.STRING(128), allowNull: true },
   slack_bot_token: {
     type: DataTypes.TEXT, allowNull: true,
@@ -39,6 +39,19 @@ const Workspace = sequelize.define('Workspace', {
     type: DataTypes.TEXT, allowNull: true,
     get() { return decrypt(this.getDataValue('okta_api_token')); },
     set(v) { this.setDataValue('okta_api_token', encrypt(v)); },
+  },
+  github_org: { type: DataTypes.STRING(255), allowNull: true },
+  github_pat: {
+    type: DataTypes.TEXT, allowNull: true,
+    get() { return decrypt(this.getDataValue('github_pat')); },
+    set(v) { this.setDataValue('github_pat', encrypt(v)); },
+  },
+  jira_domain: { type: DataTypes.STRING(255), allowNull: true },
+  jira_email: { type: DataTypes.STRING(255), allowNull: true },
+  jira_api_token: {
+    type: DataTypes.TEXT, allowNull: true,
+    get() { return decrypt(this.getDataValue('jira_api_token')); },
+    set(v) { this.setDataValue('jira_api_token', encrypt(v)); },
   },
   is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
   last_scan_at: { type: DataTypes.DATE, allowNull: true },

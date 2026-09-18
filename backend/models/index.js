@@ -77,6 +77,34 @@ async function runMigrations() {
       await sequelize.query(`ALTER TYPE "enum_workspaces_type" ADD VALUE IF NOT EXISTS 'okta'`);
       console.log('Migration: added okta to workspaces.type enum');
     } catch (e) { /* already exists */ }
+    try {
+      await sequelize.query(`ALTER TYPE "enum_workspaces_type" ADD VALUE IF NOT EXISTS 'github'`);
+      console.log('Migration: added github to workspaces.type enum');
+    } catch (e) { /* already exists */ }
+    try {
+      await sequelize.query(`ALTER TYPE "enum_workspaces_type" ADD VALUE IF NOT EXISTS 'jira'`);
+      console.log('Migration: added jira to workspaces.type enum');
+    } catch (e) { /* already exists */ }
+    if (!wsDesc.github_org) {
+      await qi.addColumn('workspaces', 'github_org', { type: DataTypes.STRING(255), allowNull: true });
+      console.log('Migration: added workspaces.github_org');
+    }
+    if (!wsDesc.github_pat) {
+      await qi.addColumn('workspaces', 'github_pat', { type: DataTypes.TEXT, allowNull: true });
+      console.log('Migration: added workspaces.github_pat');
+    }
+    if (!wsDesc.jira_domain) {
+      await qi.addColumn('workspaces', 'jira_domain', { type: DataTypes.STRING(255), allowNull: true });
+      console.log('Migration: added workspaces.jira_domain');
+    }
+    if (!wsDesc.jira_email) {
+      await qi.addColumn('workspaces', 'jira_email', { type: DataTypes.STRING(255), allowNull: true });
+      console.log('Migration: added workspaces.jira_email');
+    }
+    if (!wsDesc.jira_api_token) {
+      await qi.addColumn('workspaces', 'jira_api_token', { type: DataTypes.TEXT, allowNull: true });
+      console.log('Migration: added workspaces.jira_api_token');
+    }
   }
 
   // ── discovered_apps ──────────────────────────────────────────────────────
@@ -99,11 +127,21 @@ async function runMigrations() {
       await sequelize.query(`ALTER TYPE "enum_discovered_apps_source" ADD VALUE IF NOT EXISTS 'okta'`);
       console.log('Migration: added okta to discovered_apps.source enum');
     } catch (e) { /* already exists */ }
+    try {
+      await sequelize.query(`ALTER TYPE "enum_discovered_apps_source" ADD VALUE IF NOT EXISTS 'github'`);
+      console.log('Migration: added github to discovered_apps.source enum');
+    } catch (e) { /* already exists */ }
+    try {
+      await sequelize.query(`ALTER TYPE "enum_discovered_apps_source" ADD VALUE IF NOT EXISTS 'jira'`);
+      console.log('Migration: added jira to discovered_apps.source enum');
+    } catch (e) { /* already exists */ }
 
     // WhitelistedApp source enum
     try {
       await sequelize.query(`ALTER TYPE "enum_whitelisted_apps_source" ADD VALUE IF NOT EXISTS 'microsoft'`);
       await sequelize.query(`ALTER TYPE "enum_whitelisted_apps_source" ADD VALUE IF NOT EXISTS 'okta'`);
+      await sequelize.query(`ALTER TYPE "enum_whitelisted_apps_source" ADD VALUE IF NOT EXISTS 'github'`);
+      await sequelize.query(`ALTER TYPE "enum_whitelisted_apps_source" ADD VALUE IF NOT EXISTS 'jira'`);
       console.log('Migration: updated whitelisted_apps.source enum');
     } catch (e) { /* already exists */ }
   }
