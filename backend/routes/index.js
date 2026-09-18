@@ -11,5 +11,6 @@ router.use('/alerts', require('./alerts'));
 router.use('/cli', require('./cli'));
 router.use('/demo', require('./demo'));
 router.use('/nudges', require('./nudge'));
+router.use('/approvals', require('./approvals'));
 
 module.exports = router;

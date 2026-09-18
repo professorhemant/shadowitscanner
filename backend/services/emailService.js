@@ -157,4 +157,98 @@ async function sendNudgeEmail({ recipients, workspaceName, app }) {
   });
 }
 
-module.exports = { sendAlertEmail, sendNudgeEmail };
+async function sendApprovalRequestEmail({ itRecipients, workspaceName, request, dashboardUrl }) {
+  if (!itRecipients?.length || !process.env.SMTP_HOST) return;
+  const transport = getTransport();
+  const base = dashboardUrl || process.env.FRONTEND_URL || 'https://shadowit.app';
+
+  await transport.sendMail({
+    from: process.env.ALERT_FROM_EMAIL || 'noreply@shadowit.app',
+    to: itRecipients.join(', '),
+    subject: `📋 New App Approval Request — ${request.app_name} from ${request.requester_name}`,
+    html: `
+<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<div style="max-width:520px;margin:32px auto;background:#1e293b;border-radius:12px;border:1px solid #334155;overflow:hidden;">
+  <div style="background:#0f172a;padding:20px 24px;border-bottom:1px solid #334155;">
+    <span style="color:#e2e8f0;font-weight:700;font-size:16px;">🛡️ Shadow IT Scanner</span>
+  </div>
+  <div style="padding:24px;">
+    <h2 style="color:#f1f5f9;font-size:18px;margin:0 0 4px;">New App Approval Request</h2>
+    <p style="color:#94a3b8;font-size:13px;margin:0 0 20px;">From <strong style="color:#e2e8f0;">${request.requester_name}</strong> in <strong style="color:#e2e8f0;">${workspaceName}</strong></p>
+
+    <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:18px;margin-bottom:16px;">
+      <div style="font-size:20px;font-weight:700;color:#f1f5f9;">${request.app_name}</div>
+      ${request.app_url ? `<div style="font-size:12px;color:#6366f1;margin-top:2px;">${request.app_url}</div>` : ''}
+      ${request.app_description ? `<div style="font-size:13px;color:#94a3b8;margin-top:8px;">${request.app_description}</div>` : ''}
+    </div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">
+      <tr>
+        <td style="padding:6px 0;color:#64748b;width:140px;">Requester name</td>
+        <td style="padding:6px 0;color:#e2e8f0;">${request.requester_name}</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 0;color:#64748b;">Requester email</td>
+        <td style="padding:6px 0;color:#e2e8f0;">${request.requester_email}</td>
+      </tr>
+      ${request.business_justification ? `<tr>
+        <td style="padding:6px 0;color:#64748b;vertical-align:top;">Business reason</td>
+        <td style="padding:6px 0;color:#e2e8f0;">${request.business_justification}</td>
+      </tr>` : ''}
+    </table>
+
+    <div style="text-align:center;margin-top:20px;">
+      <a href="${base}/approvals" style="display:inline-block;background:#6366f1;color:#fff;font-weight:600;font-size:14px;padding:12px 28px;border-radius:8px;text-decoration:none;">
+        Review Request →
+      </a>
+    </div>
+  </div>
+</div>
+</body></html>`,
+  });
+}
+
+async function sendApprovalDecisionEmail({ request, workspaceName }) {
+  if (!request.requester_email || !process.env.SMTP_HOST) return;
+  const transport = getTransport();
+  const approved = request.status === 'approved';
+  const color = approved ? '#22c55e' : '#ef4444';
+  const bg    = approved ? '#052e16' : '#450a0a';
+  const emoji = approved ? '✅' : '❌';
+
+  await transport.sendMail({
+    from: process.env.ALERT_FROM_EMAIL || 'noreply@shadowit.app',
+    to: request.requester_email,
+    subject: `${emoji} Your app request for ${request.app_name} has been ${request.status}`,
+    html: `
+<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<div style="max-width:480px;margin:32px auto;background:#1e293b;border-radius:12px;border:1px solid #334155;overflow:hidden;">
+  <div style="background:#0f172a;padding:20px 24px;border-bottom:1px solid #334155;">
+    <span style="color:#e2e8f0;font-weight:700;font-size:16px;">🛡️ Shadow IT Scanner</span>
+  </div>
+  <div style="padding:24px;">
+    <div style="background:${bg};border:1px solid ${color}44;border-radius:10px;padding:20px;text-align:center;margin-bottom:20px;">
+      <div style="font-size:32px;margin-bottom:8px;">${emoji}</div>
+      <div style="font-size:18px;font-weight:700;color:#f1f5f9;">${request.app_name}</div>
+      <div style="font-size:14px;color:${color};font-weight:600;margin-top:4px;text-transform:capitalize;">${request.status}</div>
+    </div>
+
+    <p style="color:#cbd5e1;font-size:14px;margin:0 0 12px;">Hi ${request.requester_name},</p>
+    <p style="color:#94a3b8;font-size:13px;margin:0 0 16px;">
+      Your app approval request for <strong style="color:#e2e8f0;">${request.app_name}</strong> in <strong style="color:#e2e8f0;">${workspaceName}</strong> has been <strong style="color:${color};">${request.status}</strong>${request.reviewed_by ? ` by ${request.reviewed_by}` : ''}.
+    </p>
+
+    ${request.review_reason ? `
+    <div style="background:#0f172a;border:1px solid #334155;border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:16px;">
+      <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">Reason</div>
+      <div style="font-size:13px;color:#e2e8f0;">${request.review_reason}</div>
+    </div>` : ''}
+
+    ${approved ? `<p style="color:#94a3b8;font-size:13px;">The app has been approved for use. You may continue using it.</p>` : `<p style="color:#94a3b8;font-size:13px;">If you believe this is an error, please contact your IT administrator.</p>`}
+  </div>
+</div>
+</body></html>`,
+  });
+}
+
+module.exports = { sendAlertEmail, sendNudgeEmail, sendApprovalRequestEmail, sendApprovalDecisionEmail };

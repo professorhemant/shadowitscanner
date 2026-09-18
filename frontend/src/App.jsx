@@ -15,6 +15,8 @@ import Whitelist from './pages/Whitelist';
 import Alerts from './pages/Alerts';
 import Settings from './pages/Settings';
 import Nudges from './pages/Nudges';
+import Approvals from './pages/Approvals';
+import RequestApproval from './pages/RequestApproval';
 
 export default function App() {
   const { token, setAuth, logout } = useAuthStore();
@@ -30,6 +32,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/request/:workspaceId" element={<RequestApproval />} />
         <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/apps" element={<AppInventory />} />
@@ -39,6 +42,7 @@ export default function App() {
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/nudges" element={<Nudges />} />
+          <Route path="/approvals" element={<Approvals />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

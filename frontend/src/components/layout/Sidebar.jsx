@@ -8,6 +8,7 @@ const nav = [
   { to: '/whitelist', label: 'Whitelist', icon: '✓' },
   { to: '/alerts', label: 'Alerts', icon: '🔔' },
   { to: '/nudges', label: 'Nudges', icon: '📣' },
+  { to: '/approvals', label: 'Approvals', icon: '📋' },
   { to: '/connect', label: 'Connect Workspace', icon: '+' },
   { to: '/settings', label: 'Settings', icon: '⚙' },
 ];
