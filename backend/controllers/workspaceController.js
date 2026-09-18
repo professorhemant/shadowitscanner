@@ -20,6 +20,7 @@ async function create(req, res, next) {
             okta_domain, okta_api_token,
             github_org, github_pat,
             jira_domain, jira_email, jira_api_token,
+            confluence_domain, confluence_email, confluence_api_token,
             schedule } = req.body;
 
     const workspace = await Workspace.create({
@@ -30,6 +31,7 @@ async function create(req, res, next) {
       okta_domain, okta_api_token,
       github_org, github_pat,
       jira_domain, jira_email, jira_api_token,
+      confluence_domain, confluence_email, confluence_api_token,
       schedule,
     });
 
@@ -53,6 +55,7 @@ async function update(req, res, next) {
                      'okta_domain', 'okta_api_token',
                      'github_org', 'github_pat',
                      'jira_domain', 'jira_email', 'jira_api_token',
+                     'confluence_domain', 'confluence_email', 'confluence_api_token',
                      'schedule', 'is_active'];
     for (const key of allowed) {
       if (req.body[key] !== undefined) ws[key] = req.body[key];

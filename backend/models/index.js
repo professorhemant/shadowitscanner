@@ -212,7 +212,7 @@ async function runMigrations() {
       console.log('Migration: added extension to whitelisted_apps.source enum');
     } catch (e) { /* already exists */ }
     // scan_runs source + triggered_by enums
-    const scanRunSources = ['microsoft', 'okta', 'github', 'jira', 'extension'];
+    const scanRunSources = ['microsoft', 'okta', 'github', 'jira', 'extension', 'confluence'];
     for (const v of scanRunSources) {
       try {
         await sequelize.query(`ALTER TYPE "enum_scan_runs_source" ADD VALUE IF NOT EXISTS '${v}'`);
@@ -222,6 +222,32 @@ async function runMigrations() {
       await sequelize.query(`ALTER TYPE "enum_scan_runs_triggered_by" ADD VALUE IF NOT EXISTS 'extension'`);
     } catch (e) { /* already exists */ }
     console.log('Migration: updated scan_runs enums');
+
+    // Confluence workspace type + columns
+    try {
+      await sequelize.query(`ALTER TYPE "enum_workspaces_type" ADD VALUE IF NOT EXISTS 'confluence'`);
+      console.log('Migration: added confluence to workspaces.type enum');
+    } catch (e) { /* already exists */ }
+    if (!wsDesc.confluence_domain) {
+      await qi.addColumn('workspaces', 'confluence_domain', { type: DataTypes.STRING(255), allowNull: true });
+      console.log('Migration: added workspaces.confluence_domain');
+    }
+    if (!wsDesc.confluence_email) {
+      await qi.addColumn('workspaces', 'confluence_email', { type: DataTypes.STRING(255), allowNull: true });
+      console.log('Migration: added workspaces.confluence_email');
+    }
+    if (!wsDesc.confluence_api_token) {
+      await qi.addColumn('workspaces', 'confluence_api_token', { type: DataTypes.TEXT, allowNull: true });
+      console.log('Migration: added workspaces.confluence_api_token');
+    }
+    try {
+      await sequelize.query(`ALTER TYPE "enum_discovered_apps_source" ADD VALUE IF NOT EXISTS 'confluence'`);
+      console.log('Migration: added confluence to discovered_apps.source enum');
+    } catch (e) { /* already exists */ }
+    try {
+      await sequelize.query(`ALTER TYPE "enum_whitelisted_apps_source" ADD VALUE IF NOT EXISTS 'confluence'`);
+      console.log('Migration: added confluence to whitelisted_apps.source enum');
+    } catch (e) { /* already exists */ }
   }
 
   // ── team_members ─────────────────────────────────────────────────────────

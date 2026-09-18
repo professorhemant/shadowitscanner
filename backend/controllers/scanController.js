@@ -7,6 +7,7 @@ const { scanMicrosoft } = require('../services/microsoftScanner');
 const { scanOkta } = require('../services/oktaScanner');
 const { scanGithub } = require('../services/githubScanner');
 const { scanJira } = require('../services/jiraScanner');
+const { scanConfluence } = require('../services/confluenceScanner');
 const { sendAlertEmail, sendNudgeEmail } = require('../services/emailService');
 const { fireForApps, fireEvent } = require('../services/webhookService');
 
@@ -106,6 +107,9 @@ async function triggerScan(req, res, next) {
           apps = result.apps;
         } else if (ws.type === 'jira' || source === 'jira') {
           const result = await scanJira(ws);
+          apps = result.apps;
+        } else if (ws.type === 'confluence' || source === 'confluence') {
+          const result = await scanConfluence(ws);
           apps = result.apps;
         }
 

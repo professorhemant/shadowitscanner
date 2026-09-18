@@ -8,6 +8,7 @@ const { scanMicrosoft } = require('./microsoftScanner');
 const { scanOkta } = require('./oktaScanner');
 const { scanGithub } = require('./githubScanner');
 const { scanJira } = require('./jiraScanner');
+const { scanConfluence } = require('./confluenceScanner');
 const { persistScanResults } = require('../controllers/scanController');
 const { sendAlertEmail } = require('./emailService');
 
@@ -62,7 +63,8 @@ async function runWorkspaceScan(ws) {
     else if (ws.type === 'microsoft') { const r = await scanMicrosoft(ws); apps = r.apps; }
     else if (ws.type === 'okta')      { const r = await scanOkta(ws);      apps = r.apps; }
     else if (ws.type === 'github')    { const r = await scanGithub(ws);    apps = r.apps; }
-    else if (ws.type === 'jira')      { const r = await scanJira(ws);      apps = r.apps; }
+    else if (ws.type === 'jira')       { const r = await scanJira(ws);       apps = r.apps; }
+    else if (ws.type === 'confluence') { const r = await scanConfluence(ws); apps = r.apps; }
 
     await persistScanResults(ws.id, ws.type, apps, 'scheduled', run.id);
 

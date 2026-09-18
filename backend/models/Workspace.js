@@ -8,7 +8,7 @@ const Workspace = sequelize.define('Workspace', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   user_id: { type: DataTypes.UUID, allowNull: false },
   name: { type: DataTypes.STRING(255), allowNull: false },
-  type: { type: DataTypes.ENUM('slack', 'google', 'microsoft', 'okta', 'github', 'jira'), allowNull: false },
+  type: { type: DataTypes.ENUM('slack', 'google', 'microsoft', 'okta', 'github', 'jira', 'confluence'), allowNull: false },
   slack_team_id: { type: DataTypes.STRING(128), allowNull: true },
   slack_bot_token: {
     type: DataTypes.TEXT, allowNull: true,
@@ -52,6 +52,13 @@ const Workspace = sequelize.define('Workspace', {
     type: DataTypes.TEXT, allowNull: true,
     get() { return decrypt(this.getDataValue('jira_api_token')); },
     set(v) { this.setDataValue('jira_api_token', encrypt(v)); },
+  },
+  confluence_domain: { type: DataTypes.STRING(255), allowNull: true },
+  confluence_email: { type: DataTypes.STRING(255), allowNull: true },
+  confluence_api_token: {
+    type: DataTypes.TEXT, allowNull: true,
+    get() { return decrypt(this.getDataValue('confluence_api_token')); },
+    set(v) { this.setDataValue('confluence_api_token', encrypt(v)); },
   },
   slack_digest_webhook: {
     type: DataTypes.TEXT, allowNull: true,

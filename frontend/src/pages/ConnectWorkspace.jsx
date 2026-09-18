@@ -9,7 +9,8 @@ const TABS = [
   { id: 'microsoft', label: '🪟 Microsoft 365' },
   { id: 'okta',      label: '🔐 Okta' },
   { id: 'github',    label: '🐙 GitHub' },
-  { id: 'jira',      label: '🎯 Jira / Confluence' },
+  { id: 'jira',        label: '🎯 Jira' },
+  { id: 'confluence',  label: '📘 Confluence' },
 ];
 
 export default function ConnectWorkspace() {
@@ -22,6 +23,7 @@ export default function ConnectWorkspace() {
     okta_domain: '', okta_api_token: '',
     github_org: '', github_pat: '',
     jira_domain: '', jira_email: '', jira_api_token: '',
+    confluence_domain: '', confluence_email: '', confluence_api_token: '',
   });
   const [saFile, setSaFile] = useState(null);
   const [error, setError] = useState('');
@@ -49,7 +51,7 @@ export default function ConnectWorkspace() {
   return (
     <div className="p-6 max-w-2xl">
       <h1 className="text-2xl font-bold text-white mb-2">Connect Workspace</h1>
-      <p className="text-slate-400 text-sm mb-6">Connect Slack, Google Workspace, Microsoft 365, Okta, GitHub, or Jira to start scanning for shadow IT.</p>
+      <p className="text-slate-400 text-sm mb-6">Connect Slack, Google Workspace, Microsoft 365, Okta, GitHub, Jira, or Confluence to start scanning for shadow IT.</p>
 
       {/* Type toggle */}
       <div className="flex gap-3 mb-6 flex-wrap">
@@ -228,6 +230,40 @@ export default function ConnectWorkspace() {
                 placeholder="Your Atlassian API token"
                 className="w-full bg-slate-800 border border-surface-border rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500" />
               <p className="text-xs text-slate-600 mt-1">Stored encrypted. Requires Jira Admin or Site Admin role to list all installed apps.</p>
+            </div>
+          </>
+        )}
+
+        {type === 'confluence' && (
+          <>
+            <div className="bg-blue-900/20 border border-blue-700/40 rounded-lg px-4 py-3 text-xs text-blue-300 space-y-1">
+              <p className="font-medium text-white">Setup required in Atlassian:</p>
+              <ol className="list-decimal list-inside space-y-0.5 text-blue-400">
+                <li>Go to <strong>id.atlassian.com → Manage account → Security → Create and manage API tokens</strong></li>
+                <li>Click <strong>Create API token</strong> — name it "ShadowIT Scanner"</li>
+                <li>Copy the token value (shown once only)</li>
+                <li>Your domain is: <code className="bg-slate-800 px-1 rounded text-slate-300">yourcompany.atlassian.net</code></li>
+              </ol>
+              <p className="text-slate-500 mt-1">Scans: third-party Connect apps installed in Confluence + publicly accessible spaces.</p>
+            </div>
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Confluence Domain <span className="text-slate-600">(without https://)</span></label>
+              <input type="text" value={form.confluence_domain} onChange={e => set('confluence_domain', e.target.value)} required
+                placeholder="mycompany.atlassian.net"
+                className="w-full bg-slate-800 border border-surface-border rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500 font-mono" />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Atlassian Account Email</label>
+              <input type="email" value={form.confluence_email} onChange={e => set('confluence_email', e.target.value)} required
+                placeholder="admin@company.com"
+                className="w-full bg-slate-800 border border-surface-border rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500" />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">API Token</label>
+              <input type="password" value={form.confluence_api_token} onChange={e => set('confluence_api_token', e.target.value)} required
+                placeholder="Your Atlassian API token"
+                className="w-full bg-slate-800 border border-surface-border rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-brand-500" />
+              <p className="text-xs text-slate-600 mt-1">Stored encrypted. Requires Confluence Admin role to list installed apps and space permissions.</p>
             </div>
           </>
         )}
