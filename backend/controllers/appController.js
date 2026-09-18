@@ -1,7 +1,8 @@
 'use strict';
 
 const { Op } = require('sequelize');
-const { DiscoveredApp, WhitelistedApp, Workspace } = require('../models');
+const { DiscoveredApp, WhitelistedApp, Workspace, PolicyRule } = require('../models');
+const { applyRules } = require('../services/policyEngine');
 
 async function list(req, res, next) {
   try {
@@ -39,10 +40,19 @@ async function list(req, res, next) {
       wl.forEach(w => wlMap.add(`${w.app_id}:${w.source}`));
     }
 
-    const apps = rows.map(a => ({
-      ...a.toJSON(),
-      is_whitelisted: wlMap.has(`${a.app_id}:${a.source}`),
-    }));
+    // Load and apply policy rules if workspace_id specified
+    let rules = [];
+    if (workspace_id) {
+      rules = await PolicyRule.findAll({
+        where: { workspace_id, enabled: true },
+        order: [['priority', 'DESC'], ['created_at', 'ASC']],
+      });
+    }
+
+    const apps = rows.map(a => {
+      const base = { ...a.toJSON(), is_whitelisted: wlMap.has(`${a.app_id}:${a.source}`) };
+      return rules.length ? applyRules(base, rules) : { ...base, policy_flags: [] };
+    });
 
     res.json({ apps, total: count, page: Number(page), limit: Number(limit) });
   } catch (err) { next(err); }

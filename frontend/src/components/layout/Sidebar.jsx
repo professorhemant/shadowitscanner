@@ -19,6 +19,7 @@ const nav = [
   { to: '/auto-scan', label: 'Auto-Scan', icon: '⚡' },
   { to: '/analytics', label: 'Analytics', icon: '📊' },
   { to: '/team', label: 'Team', icon: '👥' },
+  { to: '/policies', label: 'Risk Policies', icon: '📋' },
   { to: '/breaches', label: 'Breach Alerts', icon: '🚨' },
   { to: '/reports', label: 'Reports', icon: '📄' },
   { to: '/connect', label: 'Connect Workspace', icon: '+' },

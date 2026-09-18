@@ -12,6 +12,7 @@ const NudgeLog = require('./NudgeLog');
 const ApprovalRequest = require('./ApprovalRequest');
 const WebhookConfig = require('./WebhookConfig');
 const WebhookDelivery = require('./WebhookDelivery');
+const PolicyRule = require('./PolicyRule');
 
 // Associations
 User.hasMany(Workspace, { foreignKey: 'user_id', onDelete: 'CASCADE' });
@@ -49,6 +50,9 @@ WebhookConfig.belongsTo(Workspace, { foreignKey: 'workspace_id' });
 
 WebhookConfig.hasMany(WebhookDelivery, { foreignKey: 'webhook_config_id', onDelete: 'CASCADE' });
 WebhookDelivery.belongsTo(WebhookConfig, { foreignKey: 'webhook_config_id' });
+
+Workspace.hasMany(PolicyRule, { foreignKey: 'workspace_id', onDelete: 'CASCADE' });
+PolicyRule.belongsTo(Workspace, { foreignKey: 'workspace_id' });
 
 async function runMigrations() {
   const { DataTypes } = require('sequelize');
@@ -249,6 +253,13 @@ async function runMigrations() {
     console.log('Migration: created webhook_deliveries table');
   }
 
+  // ── policy_rules ─────────────────────────────────────────────────────────
+  const policyDesc = await qi.describeTable('policy_rules').catch(() => null);
+  if (!policyDesc) {
+    await PolicyRule.sync({ force: false });
+    console.log('Migration: created policy_rules table');
+  }
+
   console.log('Migrations complete');
 }
 
@@ -258,4 +269,4 @@ async function syncDB() {
   console.log('Database synced');
 }
 
-module.exports = { sequelize, syncDB, User, Workspace, ScanRun, DiscoveredApp, WhitelistedApp, AlertConfig, TeamMember, NudgeLog, ApprovalRequest, WebhookConfig, WebhookDelivery };
+module.exports = { sequelize, syncDB, User, Workspace, ScanRun, DiscoveredApp, WhitelistedApp, AlertConfig, TeamMember, NudgeLog, ApprovalRequest, WebhookConfig, WebhookDelivery, PolicyRule };
