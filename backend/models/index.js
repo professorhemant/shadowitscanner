@@ -35,25 +35,49 @@ User.hasMany(TeamMember, { foreignKey: 'user_id' });
 TeamMember.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
 async function runMigrations() {
+  const { DataTypes } = require('sequelize');
   const qi = sequelize.getQueryInterface();
-  const tableDesc = await qi.describeTable('discovered_apps').catch(() => null);
-  if (!tableDesc) return; // table doesn't exist yet — sync will create it with all columns
 
-  if (!tableDesc.is_ai_tool) {
-    await qi.addColumn('discovered_apps', 'is_ai_tool', { type: require('sequelize').DataTypes.BOOLEAN, defaultValue: false, allowNull: false });
-    console.log('Migration: added is_ai_tool column');
+  // ── workspaces ──────────────────────────────────────────────────────────
+  const wsDesc = await qi.describeTable('workspaces').catch(() => null);
+  if (wsDesc) {
+    if (!wsDesc.ms_tenant_id) {
+      await qi.addColumn('workspaces', 'ms_tenant_id', { type: DataTypes.STRING(255), allowNull: true });
+      console.log('Migration: added workspaces.ms_tenant_id');
+    }
+    if (!wsDesc.ms_client_id) {
+      await qi.addColumn('workspaces', 'ms_client_id', { type: DataTypes.STRING(255), allowNull: true });
+      console.log('Migration: added workspaces.ms_client_id');
+    }
+    if (!wsDesc.ms_client_secret) {
+      await qi.addColumn('workspaces', 'ms_client_secret', { type: DataTypes.TEXT, allowNull: true });
+      console.log('Migration: added workspaces.ms_client_secret');
+    }
+    try {
+      await sequelize.query(`ALTER TYPE "enum_workspaces_type" ADD VALUE IF NOT EXISTS 'microsoft'`);
+      console.log('Migration: added microsoft to workspaces.type enum');
+    } catch (e) { /* already exists */ }
   }
-  if (!tableDesc.ai_risk_flags) {
-    await qi.addColumn('discovered_apps', 'ai_risk_flags', { type: require('sequelize').DataTypes.JSONB, allowNull: true });
-    console.log('Migration: added ai_risk_flags column');
+
+  // ── discovered_apps ──────────────────────────────────────────────────────
+  const appsDesc = await qi.describeTable('discovered_apps').catch(() => null);
+  if (appsDesc) {
+    if (!appsDesc.is_ai_tool) {
+      await qi.addColumn('discovered_apps', 'is_ai_tool', { type: DataTypes.BOOLEAN, defaultValue: false, allowNull: true });
+      await sequelize.query(`UPDATE discovered_apps SET is_ai_tool = false WHERE is_ai_tool IS NULL`);
+      console.log('Migration: added discovered_apps.is_ai_tool');
+    }
+    if (!appsDesc.ai_risk_flags) {
+      await qi.addColumn('discovered_apps', 'ai_risk_flags', { type: DataTypes.JSONB, allowNull: true });
+      console.log('Migration: added discovered_apps.ai_risk_flags');
+    }
+    try {
+      await sequelize.query(`ALTER TYPE "enum_discovered_apps_source" ADD VALUE IF NOT EXISTS 'microsoft'`);
+      console.log('Migration: added microsoft to discovered_apps.source enum');
+    } catch (e) { /* already exists */ }
   }
-  // Add 'microsoft' to source ENUM if not present
-  try {
-    await sequelize.query(`ALTER TYPE "enum_discovered_apps_source" ADD VALUE IF NOT EXISTS 'microsoft'`);
-    console.log('Migration: added microsoft to source enum');
-  } catch (e) {
-    // may fail if already exists or on non-postgres — ignore
-  }
+
+  console.log('Migrations complete');
 }
 
 async function syncDB() {
