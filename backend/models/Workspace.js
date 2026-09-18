@@ -63,7 +63,12 @@ const Workspace = sequelize.define('Workspace', {
   slack_digest_hour: { type: DataTypes.INTEGER, defaultValue: 9 },
   is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
   last_scan_at: { type: DataTypes.DATE, allowNull: true },
-  schedule: { type: DataTypes.STRING(50), allowNull: true }, // cron expression
+  schedule: { type: DataTypes.STRING(50), allowNull: true },
+  schedule_frequency: { type: DataTypes.STRING(16), defaultValue: 'off' }, // off|daily|weekly|monthly
+  schedule_hour: { type: DataTypes.INTEGER, defaultValue: 9 },
+  schedule_day: { type: DataTypes.INTEGER, defaultValue: 1 },
+  schedule_next_run: { type: DataTypes.DATE, allowNull: true },
+  schedule_notify_email: { type: DataTypes.STRING(255), allowNull: true },
 }, {
   tableName: 'workspaces',
   underscored: true,

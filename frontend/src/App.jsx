@@ -26,6 +26,7 @@ import Sensitivity from './pages/Sensitivity';
 import VendorRisk from './pages/VendorRisk';
 import SlackBot from './pages/SlackBot';
 import Webhooks from './pages/Webhooks';
+import AutoScan from './pages/AutoScan';
 
 export default function App() {
   const { token, setAuth, logout } = useAuthStore();
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="/vendor-risk" element={<VendorRisk />} />
           <Route path="/slack-bot" element={<SlackBot />} />
           <Route path="/webhooks" element={<Webhooks />} />
+          <Route path="/auto-scan" element={<AutoScan />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

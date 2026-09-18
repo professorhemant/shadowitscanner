@@ -131,6 +131,29 @@ async function runMigrations() {
       await sequelize.query(`UPDATE workspaces SET slack_digest_hour = 9 WHERE slack_digest_hour IS NULL`);
       console.log('Migration: added workspaces.slack_digest_hour');
     }
+    if (!wsDesc.schedule_frequency) {
+      await qi.addColumn('workspaces', 'schedule_frequency', { type: DataTypes.STRING(16), defaultValue: 'off', allowNull: true });
+      await sequelize.query(`UPDATE workspaces SET schedule_frequency = 'off' WHERE schedule_frequency IS NULL`);
+      console.log('Migration: added workspaces.schedule_frequency');
+    }
+    if (!wsDesc.schedule_hour) {
+      await qi.addColumn('workspaces', 'schedule_hour', { type: DataTypes.INTEGER, defaultValue: 9, allowNull: true });
+      await sequelize.query(`UPDATE workspaces SET schedule_hour = 9 WHERE schedule_hour IS NULL`);
+      console.log('Migration: added workspaces.schedule_hour');
+    }
+    if (!wsDesc.schedule_day) {
+      await qi.addColumn('workspaces', 'schedule_day', { type: DataTypes.INTEGER, defaultValue: 1, allowNull: true });
+      await sequelize.query(`UPDATE workspaces SET schedule_day = 1 WHERE schedule_day IS NULL`);
+      console.log('Migration: added workspaces.schedule_day');
+    }
+    if (!wsDesc.schedule_next_run) {
+      await qi.addColumn('workspaces', 'schedule_next_run', { type: DataTypes.DATE, allowNull: true });
+      console.log('Migration: added workspaces.schedule_next_run');
+    }
+    if (!wsDesc.schedule_notify_email) {
+      await qi.addColumn('workspaces', 'schedule_notify_email', { type: DataTypes.STRING(255), allowNull: true });
+      console.log('Migration: added workspaces.schedule_notify_email');
+    }
   }
 
   // ── discovered_apps ──────────────────────────────────────────────────────
@@ -178,15 +201,17 @@ async function runMigrations() {
       await sequelize.query(`ALTER TYPE "enum_whitelisted_apps_source" ADD VALUE IF NOT EXISTS 'extension'`);
       console.log('Migration: added extension to whitelisted_apps.source enum');
     } catch (e) { /* already exists */ }
-    // extension scan run source
-    try {
-      await sequelize.query(`ALTER TYPE "enum_scan_runs_source" ADD VALUE IF NOT EXISTS 'extension'`);
-      console.log('Migration: added extension to scan_runs.source enum');
-    } catch (e) { /* already exists */ }
+    // scan_runs source + triggered_by enums
+    const scanRunSources = ['microsoft', 'okta', 'github', 'jira', 'extension'];
+    for (const v of scanRunSources) {
+      try {
+        await sequelize.query(`ALTER TYPE "enum_scan_runs_source" ADD VALUE IF NOT EXISTS '${v}'`);
+      } catch (e) { /* already exists */ }
+    }
     try {
       await sequelize.query(`ALTER TYPE "enum_scan_runs_triggered_by" ADD VALUE IF NOT EXISTS 'extension'`);
-      console.log('Migration: added extension to scan_runs.triggered_by enum');
     } catch (e) { /* already exists */ }
+    console.log('Migration: updated scan_runs enums');
   }
 
   // ── nudge_logs ───────────────────────────────────────────────────────────

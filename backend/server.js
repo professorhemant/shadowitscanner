@@ -5,17 +5,24 @@ const cron = require('node-cron');
 const app = require('./app');
 const { syncDB } = require('./models');
 const { runDigestCron } = require('./services/slackBotService');
+const { runScheduledScans } = require('./services/scanScheduleService');
 
 const PORT = process.env.PORT || 5000;
 
 syncDB().then(() => {
   app.listen(PORT, () => console.log(`Shadow IT backend running on port ${PORT}`));
 
-  // Slack digest: fires at the top of every hour (UTC), sends to workspaces whose digest_hour matches
+  // Slack digest: fires at the top of every hour
   cron.schedule('0 * * * *', () => {
     runDigestCron().catch(e => console.error('[SlackBot cron]', e.message));
   });
-  console.log('Slack digest cron scheduled (hourly)');
+
+  // Auto-scan scheduler: checks for due scans every hour
+  cron.schedule('5 * * * *', () => {
+    runScheduledScans().catch(e => console.error('[AutoScan cron]', e.message));
+  });
+
+  console.log('Crons scheduled: Slack digest + auto-scan (hourly)');
 }).catch(err => {
   console.error('DB sync failed:', err);
   process.exit(1);

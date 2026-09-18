@@ -21,5 +21,6 @@ router.use('/sensitivity', require('./sensitivity'));
 router.use('/vendor-risk', require('./vendorRisk'));
 router.use('/slack-bot', require('./slackBot'));
 router.use('/webhooks', require('./webhooks'));
+router.use('/schedule', require('./schedule'));
 
 module.exports = router;
