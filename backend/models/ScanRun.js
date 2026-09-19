@@ -8,7 +8,7 @@ const ScanRun = sequelize.define('ScanRun', {
   workspace_id: { type: DataTypes.UUID, allowNull: false },
   triggered_by: { type: DataTypes.ENUM('manual', 'scheduled', 'cli'), allowNull: false },
   status: { type: DataTypes.ENUM('pending', 'running', 'completed', 'failed'), defaultValue: 'pending' },
-  source: { type: DataTypes.ENUM('slack', 'google', 'both'), allowNull: false },
+  source: { type: DataTypes.ENUM('slack', 'google', 'microsoft', 'okta', 'github', 'jira', 'confluence', 'extension', 'both'), allowNull: false },
   apps_found: { type: DataTypes.INTEGER, allowNull: true },
   critical_count: { type: DataTypes.INTEGER, allowNull: true },
   high_count: { type: DataTypes.INTEGER, allowNull: true },

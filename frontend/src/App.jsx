@@ -42,7 +42,12 @@ export default function App() {
 
   useEffect(() => {
     if (!token) return;
-    me().then(res => setAuth(res.data.user, token)).catch(() => logout());
+    const snapToken = token;
+    me().then(res => {
+      if (localStorage.getItem('shadow_token') === snapToken) setAuth(res.data.user, snapToken);
+    }).catch(() => {
+      if (localStorage.getItem('shadow_token') === snapToken) logout();
+    });
   }, []);
 
   return (
