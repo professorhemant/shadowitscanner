@@ -26,6 +26,7 @@ export default function ConnectWorkspace() {
     confluence_domain: '', confluence_email: '', confluence_api_token: '',
   });
   const [saFile, setSaFile] = useState(null);
+  const [saJson, setSaJson] = useState('');
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
   const qc = useQueryClient();
@@ -41,17 +42,25 @@ export default function ConnectWorkspace() {
 
   async function handleSubmit(e) {
     e.preventDefault(); setError('');
-    if (type === 'google' && !saFile) {
-      setError('Please choose a Service Account JSON key file.');
-      return;
-    }
     const payload = { ...form, type };
-    if (type === 'google' && saFile) {
-      try {
-        const text = await saFile.text();
-        payload.google_service_account = JSON.parse(text);
-      } catch {
-        setError('Invalid JSON file — please upload a valid service account key.');
+    if (type === 'google') {
+      if (saFile) {
+        try {
+          const text = await saFile.text();
+          payload.google_service_account = JSON.parse(text);
+        } catch {
+          setError('Invalid JSON file — please upload a valid service account key.');
+          return;
+        }
+      } else if (saJson.trim()) {
+        try {
+          payload.google_service_account = JSON.parse(saJson.trim());
+        } catch {
+          setError('Invalid JSON — please check the pasted text.');
+          return;
+        }
+      } else {
+        setError('Please upload a JSON file or paste the service account JSON below.');
         return;
       }
     }
@@ -143,6 +152,18 @@ export default function ConnectWorkspace() {
                   </button>
                 )}
               </div>
+              <div className="mt-2 flex items-center gap-2 text-xs text-slate-600">
+                <div className="h-px flex-1 bg-surface-border" />
+                <span>or paste JSON directly</span>
+                <div className="h-px flex-1 bg-surface-border" />
+              </div>
+              <textarea
+                value={saJson}
+                onChange={e => { setSaJson(e.target.value); if (e.target.value) { setSaFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; } }}
+                placeholder={'{\n  "type": "service_account",\n  "project_id": "...",\n  ...\n}'}
+                rows={5}
+                className="mt-2 w-full bg-slate-800 border border-surface-border rounded-lg px-3 py-2 text-xs text-slate-300 font-mono focus:outline-none focus:border-brand-500 resize-none placeholder-slate-700"
+              />
               <p className="text-xs text-slate-600 mt-1">Must have Admin SDK Reports API + domain-wide delegation configured.</p>
             </div>
           </>
