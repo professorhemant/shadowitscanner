@@ -285,4 +285,4 @@ async function seedDemo(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { seedDemo, demoLogin };
+module.exports = { seedDemo, demoLogin, DEMO_APPS_RAW };

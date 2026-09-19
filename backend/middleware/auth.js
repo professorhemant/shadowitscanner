@@ -7,8 +7,11 @@ const { User } = require('../models');
 const DEMO_EMAIL = 'demo@shadowit.app';
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
+const DEMO_ALLOWED_URLS = ['/api/scans/trigger'];
+
 function demoGuard(req, res, next) {
   if (req.user?.email === DEMO_EMAIL && !SAFE_METHODS.has(req.method)) {
+    if (DEMO_ALLOWED_URLS.some(u => req.originalUrl?.includes(u))) return next();
     return res.status(403).json({
       message: 'This is a read-only demo. Sign up free to make changes to real data.',
       demo_readonly: true,
