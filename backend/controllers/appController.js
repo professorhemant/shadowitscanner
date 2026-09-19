@@ -201,4 +201,44 @@ async function getDetail(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { list, getDetail, whitelist, removeWhitelist, exportCsv };
+async function bulkAction(req, res, next) {
+  try {
+    const { ids, action, reason } = req.body;
+    if (!Array.isArray(ids) || !ids.length) return res.status(400).json({ message: 'ids array required' });
+    if (!['whitelist', 'unwhitelist'].includes(action)) return res.status(400).json({ message: 'action must be whitelist or unwhitelist' });
+
+    // Fetch all requested apps and verify ownership in one shot
+    const apps = await DiscoveredApp.findAll({ where: { id: { [Op.in]: ids } } });
+    if (!apps.length) return res.status(404).json({ message: 'No apps found' });
+
+    const wsIds = [...new Set(apps.map(a => a.workspace_id))];
+    const ownedWs = await Workspace.findAll({ where: { id: { [Op.in]: wsIds }, user_id: req.user.id } });
+    const ownedSet = new Set(ownedWs.map(w => w.id));
+
+    const allowed = apps.filter(a => ownedSet.has(a.workspace_id));
+    if (!allowed.length) return res.status(403).json({ message: 'Forbidden' });
+
+    let ok = 0;
+    for (const app of allowed) {
+      if (action === 'whitelist') {
+        await WhitelistedApp.upsert({
+          workspace_id: app.workspace_id,
+          app_id: app.app_id,
+          source: app.source,
+          approved_by: req.user.id,
+          reason: reason || null,
+          approved_at: new Date(),
+        });
+        logAction(req, app.workspace_id, 'app.whitelist', 'app', app.app_id, app.app_name, { source: app.source, reason, bulk: true });
+      } else {
+        await WhitelistedApp.destroy({ where: { workspace_id: app.workspace_id, app_id: app.app_id, source: app.source } });
+        logAction(req, app.workspace_id, 'app.unwhitelist', 'app', app.app_id, app.app_name, { source: app.source, bulk: true });
+      }
+      ok++;
+    }
+
+    res.json({ ok, total: ids.length, action });
+  } catch (err) { next(err); }
+}
+
+module.exports = { list, getDetail, whitelist, removeWhitelist, exportCsv, bulkAction };

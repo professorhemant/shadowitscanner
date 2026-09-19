@@ -6,3 +6,5 @@ export const whitelistApp = (id, reason) => client.post(`/apps/${id}/whitelist`,
 export const removeWhitelist = (id) => client.delete(`/apps/${id}/whitelist`);
 export const exportAppsCsv = (workspaceId) =>
   client.get('/apps/export', { params: { workspace_id: workspaceId }, responseType: 'blob' });
+export const bulkActionApps = (ids, action, reason) =>
+  client.post('/apps/bulk-action', { ids, action, reason });

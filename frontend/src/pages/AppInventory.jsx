@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { listApps, whitelistApp, removeWhitelist, exportAppsCsv, getAppDetail } from '../api/apps';
+import { listApps, whitelistApp, removeWhitelist, exportAppsCsv, bulkActionApps } from '../api/apps';
 import { useWorkspaceStore } from '../store/workspaceStore';
+import { useToastStore } from '../store/toastStore';
 import RiskBadge from '../components/apps/RiskBadge';
 import AppDetailModal from '../components/apps/AppDetailModal';
 
@@ -9,6 +10,7 @@ const LEVELS = ['', 'critical', 'high', 'medium', 'low'];
 
 export default function AppInventory() {
   const { activeWorkspace } = useWorkspaceStore();
+  const addToast = useToastStore(s => s.addToast);
   const [search, setSearch] = useState('');
   const [riskFilter, setRiskFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
@@ -16,6 +18,9 @@ export default function AppInventory() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [checkedIds, setCheckedIds] = useState(new Set());
+  const [bulkReason, setBulkReason] = useState('');
+  const [showBulkReason, setShowBulkReason] = useState(false);
   const qc = useQueryClient();
 
   async function handleExport() {
@@ -46,12 +51,57 @@ export default function AppInventory() {
       is_ai_tool: aiOnly ? 'true' : undefined,
       page, limit: 50, sort: 'risk_score', order: 'DESC',
     }).then(r => r.data),
+    onSuccess: () => setCheckedIds(new Set()),
   });
+
+  const apps = data?.apps || [];
 
   const wlMutation = useMutation({
     mutationFn: (app) => app.is_whitelisted ? removeWhitelist(app.id) : whitelistApp(app.id),
     onSuccess: () => qc.invalidateQueries(['apps']),
   });
+
+  const bulkMutation = useMutation({
+    mutationFn: ({ action, reason }) => bulkActionApps([...checkedIds], action, reason),
+    onSuccess: (res, vars) => {
+      qc.invalidateQueries(['apps']);
+      setCheckedIds(new Set());
+      setShowBulkReason(false);
+      setBulkReason('');
+      addToast(`${res.data.ok} app${res.data.ok !== 1 ? 's' : ''} ${vars.action === 'whitelist' ? 'approved' : 'removed from whitelist'}`, 'success');
+    },
+    onError: () => addToast('Bulk action failed', 'error'),
+  });
+
+  const allPageIds = apps.map(a => a.id);
+  const allPageChecked = allPageIds.length > 0 && allPageIds.every(id => checkedIds.has(id));
+  const someChecked = checkedIds.size > 0;
+
+  function toggleAll() {
+    if (allPageChecked) {
+      setCheckedIds(prev => { const n = new Set(prev); allPageIds.forEach(id => n.delete(id)); return n; });
+    } else {
+      setCheckedIds(prev => { const n = new Set(prev); allPageIds.forEach(id => n.add(id)); return n; });
+    }
+  }
+
+  function toggleOne(id) {
+    setCheckedIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }
+
+  function handleBulkApprove() {
+    if (!someChecked) return;
+    setShowBulkReason(true);
+  }
+
+  function submitBulkApprove() {
+    bulkMutation.mutate({ action: 'whitelist', reason: bulkReason });
+  }
+
+  function handleBulkRemove() {
+    if (!someChecked) return;
+    bulkMutation.mutate({ action: 'unwhitelist' });
+  }
 
   return (
     <div className="p-6 space-y-5 max-w-6xl">
@@ -98,11 +148,67 @@ export default function AppInventory() {
         </button>
       </div>
 
+      {/* Bulk action bar */}
+      {someChecked && (
+        <div className="flex items-center gap-3 bg-brand-600/10 border border-brand-500/30 rounded-xl px-4 py-3">
+          <span className="text-brand-400 text-sm font-semibold">{checkedIds.size} app{checkedIds.size !== 1 ? 's' : ''} selected</span>
+          <div className="flex-1" />
+          {showBulkReason ? (
+            <div className="flex items-center gap-2">
+              <input
+                placeholder="Approval reason (optional)"
+                value={bulkReason}
+                onChange={e => setBulkReason(e.target.value)}
+                className="bg-surface border border-surface-border rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500 w-56"
+              />
+              <button
+                onClick={submitBulkApprove}
+                disabled={bulkMutation.isLoading}
+                className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg disabled:opacity-50 transition-colors"
+              >
+                {bulkMutation.isLoading ? 'Approving…' : 'Confirm Approve'}
+              </button>
+              <button onClick={() => setShowBulkReason(false)} className="px-3 py-1.5 text-sm text-slate-400 hover:text-slate-200">Cancel</button>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={handleBulkApprove}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600/20 border border-green-500/30 text-green-400 hover:bg-green-600/30 text-sm font-medium rounded-lg transition-colors"
+              >
+                ✓ Approve {checkedIds.size}
+              </button>
+              <button
+                onClick={handleBulkRemove}
+                disabled={bulkMutation.isLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700/50 border border-surface-border text-slate-400 hover:text-slate-200 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                ✕ Remove Approval
+              </button>
+              <button
+                onClick={() => setCheckedIds(new Set())}
+                className="px-2 py-1.5 text-slate-500 hover:text-slate-300 text-sm"
+              >
+                Clear
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Table */}
       <div className="bg-surface-card rounded-xl border border-surface-border overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-surface-border">
+              <th className="px-4 py-3 w-8">
+                <input
+                  type="checkbox"
+                  checked={allPageChecked}
+                  onChange={toggleAll}
+                  className="accent-brand-500 w-4 h-4 cursor-pointer"
+                />
+              </th>
               {['App Name','Source','Risk','Score','Users','Verified',''].map(h => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
               ))}
@@ -110,18 +216,29 @@ export default function AppInventory() {
           </thead>
           <tbody>
             {isLoading ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-500">Loading…</td></tr>
-            ) : data?.apps?.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-500">No apps found</td></tr>
-            ) : data?.apps?.map(app => (
-              <tr key={app.id} className="border-b border-surface-border/50 hover:bg-slate-700/20 cursor-pointer"
-                onClick={() => setSelected(app)}>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-500">Loading…</td></tr>
+            ) : apps.length === 0 ? (
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-500">No apps found</td></tr>
+            ) : apps.map(app => (
+              <tr
+                key={app.id}
+                className={`border-b border-surface-border/50 hover:bg-slate-700/20 cursor-pointer transition-colors ${checkedIds.has(app.id) ? 'bg-brand-600/5' : ''}`}
+                onClick={() => setSelected(app)}
+              >
+                <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={checkedIds.has(app.id)}
+                    onChange={() => toggleOne(app.id)}
+                    className="accent-brand-500 w-4 h-4 cursor-pointer"
+                  />
+                </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-slate-200 truncate max-w-[180px]">{app.app_name}</span>
                     {app.is_ai_tool && <span className="shrink-0 text-xs bg-purple-600/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 rounded font-medium">AI</span>}
                   </div>
-                  {app.is_whitelisted && <span className="text-xs text-green-400">✓ whitelisted</span>}
+                  {app.is_whitelisted && <span className="text-xs text-green-400">✓ approved</span>}
                 </td>
                 <td className="px-4 py-3 text-slate-400 capitalize">{app.source}</td>
                 <td className="px-4 py-3"><RiskBadge level={app.risk_level} /></td>
