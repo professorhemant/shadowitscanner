@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { listApps, whitelistApp, removeWhitelist, exportAppsCsv } from '../api/apps';
+import { listApps, whitelistApp, removeWhitelist, exportAppsCsv, getAppDetail } from '../api/apps';
 import { useWorkspaceStore } from '../store/workspaceStore';
 import RiskBadge from '../components/apps/RiskBadge';
 import AppDetailModal from '../components/apps/AppDetailModal';
@@ -152,7 +152,7 @@ export default function AppInventory() {
         </div>
       )}
 
-      <AppDetailModal app={selected} onClose={() => setSelected(null)} onWhitelist={app => { wlMutation.mutate(app); setSelected(null); }} />
+      <AppDetailModal app={selected} onClose={() => setSelected(null)} onWhitelist={() => { qc.invalidateQueries(['apps']); }} />
     </div>
   );
 }

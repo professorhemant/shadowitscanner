@@ -162,4 +162,43 @@ async function exportCsv(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { list, whitelist, removeWhitelist, exportCsv };
+async function getDetail(req, res, next) {
+  try {
+    const app = await DiscoveredApp.findByPk(req.params.id);
+    if (!app) return res.status(404).json({ message: 'App not found' });
+
+    const ws = await Workspace.findOne({ where: { id: app.workspace_id, user_id: req.user.id } });
+    if (!ws) return res.status(403).json({ message: 'Forbidden' });
+
+    // Whitelist info
+    const wl = await WhitelistedApp.findOne({
+      where: { workspace_id: app.workspace_id, app_id: app.app_id, source: app.source },
+    });
+    let whitelist_info = null;
+    if (wl) {
+      const { User } = require('../models');
+      const approver = await User.findByPk(wl.approved_by, { attributes: ['name', 'email'] }).catch(() => null);
+      whitelist_info = {
+        approved_at: wl.approved_at,
+        reason: wl.reason,
+        approved_by_name: approver?.name || null,
+        approved_by_email: approver?.email || null,
+        expires_at: wl.expires_at,
+      };
+    }
+
+    // Policy flags
+    const rules = await PolicyRule.findAll({
+      where: { workspace_id: app.workspace_id, enabled: true },
+      order: [['priority', 'DESC'], ['created_at', 'ASC']],
+    });
+    const modified = rules.length ? require('../services/policyEngine').applyRules(app.toJSON(), rules) : { policy_flags: [] };
+
+    res.json({
+      app: { ...app.toJSON(), is_whitelisted: !!wl, policy_flags: modified.policy_flags },
+      whitelist_info,
+    });
+  } catch (err) { next(err); }
+}
+
+module.exports = { list, getDetail, whitelist, removeWhitelist, exportCsv };
