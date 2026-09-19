@@ -17,6 +17,7 @@ const nav = [
   { to: '/slack-bot', label: 'Slack Bot', icon: '💬' },
   { to: '/webhooks', label: 'Webhooks', icon: '🔗' },
   { to: '/api-keys', label: 'API Keys', icon: '🔑' },
+  { to: '/audit', label: 'Audit Log', icon: '🗒️' },
   { to: '/auto-scan', label: 'Auto-Scan', icon: '⚡' },
   { to: '/analytics', label: 'Analytics', icon: '📊' },
   { to: '/team', label: 'Team', icon: '👥' },

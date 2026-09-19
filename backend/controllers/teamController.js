@@ -3,6 +3,7 @@
 const crypto = require('crypto');
 const { Workspace, TeamMember, User } = require('../models');
 const nodemailer = require('nodemailer');
+const { logAction } = require('../utils/audit');
 
 const VALID_ROLES = ['admin', 'viewer'];
 
@@ -76,6 +77,7 @@ async function invite(req, res, next) {
     const frontendUrl = process.env.FRONTEND_URL || 'https://shadowit.app';
     const acceptUrl = `${frontendUrl}/invite/accept?token=${invite_token}`;
     sendInviteEmail(email.toLowerCase(), req.user.name, ws.name, acceptUrl);
+    logAction(req, workspace_id, 'team.invite', 'team_member', member.id, email.toLowerCase(), { role, workspace: ws.name });
 
     res.json({ message: 'Invitation sent', invite_token, accept_url: acceptUrl });
   } catch (err) { next(err); }
@@ -117,6 +119,7 @@ async function revoke(req, res, next) {
     const ws = await Workspace.findOne({ where: { id: member.workspace_id, user_id: req.user.id } });
     if (!ws) return res.status(403).json({ message: 'Forbidden' });
 
+    logAction(req, member.workspace_id, 'team.revoke', 'team_member', member.id, member.email, {});
     await member.update({ status: 'revoked' });
     res.json({ message: 'Access revoked' });
   } catch (err) { next(err); }

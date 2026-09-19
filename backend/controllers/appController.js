@@ -3,6 +3,7 @@
 const { Op } = require('sequelize');
 const { DiscoveredApp, WhitelistedApp, Workspace, PolicyRule } = require('../models');
 const { applyRules } = require('../services/policyEngine');
+const { logAction } = require('../utils/audit');
 
 async function list(req, res, next) {
   try {
@@ -75,6 +76,7 @@ async function whitelist(req, res, next) {
       reason: reason || null,
       approved_at: new Date(),
     });
+    logAction(req, app.workspace_id, 'app.whitelist', 'app', app.app_id, app.app_name, { source: app.source, reason });
     res.json({ message: 'App whitelisted' });
   } catch (err) { next(err); }
 }
@@ -88,6 +90,7 @@ async function removeWhitelist(req, res, next) {
     if (!ws) return res.status(403).json({ message: 'Forbidden' });
 
     await WhitelistedApp.destroy({ where: { workspace_id: app.workspace_id, app_id: app.app_id, source: app.source } });
+    logAction(req, app.workspace_id, 'app.unwhitelist', 'app', app.app_id, app.app_name, { source: app.source });
     res.json({ message: 'Removed from whitelist' });
   } catch (err) { next(err); }
 }

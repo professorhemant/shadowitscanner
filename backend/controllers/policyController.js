@@ -2,6 +2,7 @@
 
 const { Workspace, PolicyRule, DiscoveredApp } = require('../models');
 const { applyRules } = require('../services/policyEngine');
+const { logAction } = require('../utils/audit');
 
 const VALID_CONDITIONS = [
   'app_name_contains','developer_contains','has_scope_containing',
@@ -52,6 +53,7 @@ async function create(req, res, next) {
       priority: Number(priority) || 0,
       enabled: true,
     });
+    logAction(req, workspace_id, 'policy.create', 'policy_rule', rule.id, rule.name, { condition_type, action_type, action_value });
     res.json({ rule, message: 'Policy rule created' });
   } catch (err) { next(err); }
 }
@@ -81,6 +83,7 @@ async function remove(req, res, next) {
     if (!rule) return res.status(404).json({ message: 'Rule not found' });
     const ws = await Workspace.findOne({ where: { id: rule.workspace_id, user_id: req.user.id } });
     if (!ws) return res.status(403).json({ message: 'Forbidden' });
+    logAction(req, rule.workspace_id, 'policy.delete', 'policy_rule', rule.id, rule.name, {});
     await rule.destroy();
     res.json({ message: 'Rule deleted' });
   } catch (err) { next(err); }

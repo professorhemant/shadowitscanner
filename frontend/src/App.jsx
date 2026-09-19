@@ -31,6 +31,7 @@ import Analytics from './pages/Analytics';
 import Team from './pages/Team';
 import Policies from './pages/Policies';
 import ApiKeys from './pages/ApiKeys';
+import AuditLog from './pages/AuditLog';
 import Pricing from './pages/Pricing';
 import Demo from './pages/Demo';
 import Toast from './components/Toast';
@@ -77,6 +78,7 @@ export default function App() {
           <Route path="/invite/accept" element={<Team />} />
           <Route path="/policies" element={<Policies />} />
           <Route path="/api-keys" element={<ApiKeys />} />
+          <Route path="/audit" element={<AuditLog />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

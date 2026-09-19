@@ -10,6 +10,7 @@ const { scanJira } = require('../services/jiraScanner');
 const { scanConfluence } = require('../services/confluenceScanner');
 const { sendAlertEmail, sendNudgeEmail } = require('../services/emailService');
 const { fireForApps, fireEvent } = require('../services/webhookService');
+const { logAction } = require('../utils/audit');
 
 async function persistScanResults(workspaceId, source, apps, triggeredBy, scanRunId) {
   const counts = { critical: 0, high: 0, medium: 0, low: 0 };
@@ -84,6 +85,7 @@ async function triggerScan(req, res, next) {
       source: source || ws.type, status: 'running', started_at: new Date(),
     });
 
+    logAction(req, workspace_id, 'scan.start', 'scan_run', run.id, ws.name, { source: source || ws.type });
     res.status(202).json({ scan_run_id: run.id, message: 'Scan started' });
 
     // Run scan async
