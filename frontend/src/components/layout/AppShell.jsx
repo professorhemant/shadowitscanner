@@ -17,14 +17,15 @@ export default function AppShell() {
     () => !!localStorage.getItem('shadow_onboarding_done')
   );
 
-  useQuery({
+  const { isSuccess: wsLoaded } = useQuery({
     queryKey: ['workspaces'],
     queryFn: () => listWorkspaces().then(r => { setWorkspaces(r.data.workspaces); return r.data.workspaces; }),
     staleTime: 30_000,
   });
 
   const isDemo = user?.email === DEMO_EMAIL;
-  const showWizard = !isDemo && !wizardDismissed && workspaces.length === 0;
+  // Only show after both user + workspaces have resolved to avoid flash for existing users
+  const showWizard = user && wsLoaded && !isDemo && !wizardDismissed && workspaces.length === 0;
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
