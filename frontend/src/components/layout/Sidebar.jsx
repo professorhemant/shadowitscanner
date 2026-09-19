@@ -29,7 +29,7 @@ const nav = [
   { to: '/settings', label: 'Settings', icon: '⚙' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onOpenPalette }) {
   const logout = useAuthStore(s => s.logout);
   return (
     <aside className="w-56 bg-surface-card border-r border-surface-border flex flex-col">
@@ -39,7 +39,18 @@ export default function Sidebar() {
           <span className="font-bold text-white text-lg">Shadow IT</span>
         </div>
       </div>
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+
+      {/* Cmd+K search trigger */}
+      <button
+        onClick={onOpenPalette}
+        className="mx-3 mt-3 flex items-center gap-2 px-3 py-2 bg-surface border border-surface-border rounded-lg text-sm text-slate-500 hover:border-slate-600 hover:text-slate-400 transition-colors"
+      >
+        <span className="text-base">⌕</span>
+        <span className="flex-1 text-left text-xs">Search…</span>
+        <kbd className="text-[10px] bg-slate-800 border border-slate-700 rounded px-1 py-0.5 text-slate-600">⌘K</kbd>
+      </button>
+
+      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
         {nav.map(item => (
           <NavLink
             key={item.to}

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import Sidebar from './Sidebar';
 import DemoBanner from './DemoBanner';
 import OnboardingWizard from '../onboarding/OnboardingWizard';
+import CommandPalette from '../CommandPalette';
 import { listWorkspaces } from '../../api/workspaces';
 import { useWorkspaceStore } from '../../store/workspaceStore';
 import { useAuthStore } from '../../store/authStore';
@@ -16,6 +17,7 @@ export default function AppShell() {
   const [wizardDismissed, setWizardDismissed] = useState(
     () => !!localStorage.getItem('shadow_onboarding_done')
   );
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   const { isSuccess: wsLoaded } = useQuery({
     queryKey: ['workspaces'],
@@ -23,15 +25,26 @@ export default function AppShell() {
     staleTime: 30_000,
   });
 
+  // Global Cmd+K / Ctrl+K listener
+  useEffect(() => {
+    function onKey(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setPaletteOpen(v => !v);
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const isDemo = user?.email === DEMO_EMAIL;
-  // Only show after both user + workspaces have resolved to avoid flash for existing users
   const showWizard = user && wsLoaded && !isDemo && !wizardDismissed && workspaces.length === 0;
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <DemoBanner />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+        <Sidebar onOpenPalette={() => setPaletteOpen(true)} />
         <main className="flex-1 overflow-y-auto bg-surface">
           <Outlet />
         </main>
@@ -43,6 +56,8 @@ export default function AppShell() {
           setWizardDismissed(true);
         }} />
       )}
+
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }
