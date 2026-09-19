@@ -286,13 +286,21 @@ async function runMigrations() {
     } catch (e) { /* already exists */ }
 
     // Unique constraint on (workspace_id, app_id, source) — deduplicate across scan runs
-    try {
+    const [idxRows] = await sequelize.query(
+      `SELECT 1 FROM pg_indexes WHERE indexname = 'discovered_apps_workspace_app_source_unique'`
+    );
+    if (!idxRows.length) {
+      // Delete older duplicates, keeping the most recent row per (workspace_id, app_id, source)
       await sequelize.query(`
-        DELETE FROM discovered_apps da
-        WHERE id NOT IN (
-          SELECT DISTINCT ON (workspace_id, app_id, source) id
-          FROM discovered_apps
-          ORDER BY workspace_id, app_id, source, created_at DESC
+        DELETE FROM discovered_apps
+        WHERE id IN (
+          SELECT id FROM (
+            SELECT id, ROW_NUMBER() OVER (
+              PARTITION BY workspace_id, app_id, source
+              ORDER BY created_at DESC
+            ) AS rn
+            FROM discovered_apps
+          ) t WHERE rn > 1
         )
       `);
       await sequelize.query(`
@@ -301,7 +309,7 @@ async function runMigrations() {
         UNIQUE (workspace_id, app_id, source)
       `);
       console.log('Migration: added unique constraint (workspace_id, app_id, source) to discovered_apps');
-    } catch (e) { /* already exists */ }
+    }
   }
 
   // ── team_members ─────────────────────────────────────────────────────────

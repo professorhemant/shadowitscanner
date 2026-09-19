@@ -38,7 +38,6 @@ const DiscoveredApp = sequelize.define('DiscoveredApp', {
     { fields: ['workspace_id', 'source'] },
     { fields: ['workspace_id', 'risk_level'] },
     { fields: ['scan_run_id'] },
-    { fields: ['workspace_id', 'app_id', 'source'], unique: true, name: 'discovered_apps_workspace_app_source_unique' },
   ],
 });
 
