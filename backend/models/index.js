@@ -168,6 +168,38 @@ async function runMigrations() {
       await qi.addColumn('workspaces', 'schedule_notify_email', { type: DataTypes.STRING(255), allowNull: true });
       console.log('Migration: added workspaces.schedule_notify_email');
     }
+    if (!wsDesc.digest_enabled) {
+      await qi.addColumn('workspaces', 'digest_enabled', { type: DataTypes.BOOLEAN, defaultValue: false, allowNull: true });
+      await sequelize.query(`UPDATE workspaces SET digest_enabled = false WHERE digest_enabled IS NULL`);
+      console.log('Migration: added workspaces.digest_enabled');
+    }
+    if (!wsDesc.digest_email) {
+      await qi.addColumn('workspaces', 'digest_email', { type: DataTypes.STRING(255), allowNull: true });
+      console.log('Migration: added workspaces.digest_email');
+    }
+    if (!wsDesc.digest_frequency) {
+      await qi.addColumn('workspaces', 'digest_frequency', { type: DataTypes.STRING(16), defaultValue: 'weekly', allowNull: true });
+      await sequelize.query(`UPDATE workspaces SET digest_frequency = 'weekly' WHERE digest_frequency IS NULL`);
+      console.log('Migration: added workspaces.digest_frequency');
+    }
+    if (!wsDesc.digest_day) {
+      await qi.addColumn('workspaces', 'digest_day', { type: DataTypes.INTEGER, defaultValue: 1, allowNull: true });
+      await sequelize.query(`UPDATE workspaces SET digest_day = 1 WHERE digest_day IS NULL`);
+      console.log('Migration: added workspaces.digest_day');
+    }
+    if (!wsDesc.digest_hour) {
+      await qi.addColumn('workspaces', 'digest_hour', { type: DataTypes.INTEGER, defaultValue: 9, allowNull: true });
+      await sequelize.query(`UPDATE workspaces SET digest_hour = 9 WHERE digest_hour IS NULL`);
+      console.log('Migration: added workspaces.digest_hour');
+    }
+    if (!wsDesc.digest_next_send) {
+      await qi.addColumn('workspaces', 'digest_next_send', { type: DataTypes.DATE, allowNull: true });
+      console.log('Migration: added workspaces.digest_next_send');
+    }
+    if (!wsDesc.digest_last_sent) {
+      await qi.addColumn('workspaces', 'digest_last_sent', { type: DataTypes.DATE, allowNull: true });
+      console.log('Migration: added workspaces.digest_last_sent');
+    }
   }
 
   // ── discovered_apps ──────────────────────────────────────────────────────

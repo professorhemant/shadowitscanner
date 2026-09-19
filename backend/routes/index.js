@@ -27,5 +27,6 @@ router.use('/team', require('./team'));
 router.use('/policies', require('./policies'));
 router.use('/apikeys', require('./apikeys'));
 router.use('/audit', require('./audit'));
+router.use('/digest', require('./digest'));
 
 module.exports = router;

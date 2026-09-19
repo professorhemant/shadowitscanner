@@ -18,6 +18,7 @@ const nav = [
   { to: '/webhooks', label: 'Webhooks', icon: '🔗' },
   { to: '/api-keys', label: 'API Keys', icon: '🔑' },
   { to: '/audit', label: 'Audit Log', icon: '🗒️' },
+  { to: '/digest', label: 'Email Digest', icon: '📨' },
   { to: '/auto-scan', label: 'Auto-Scan', icon: '⚡' },
   { to: '/analytics', label: 'Analytics', icon: '📊' },
   { to: '/team', label: 'Team', icon: '👥' },

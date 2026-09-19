@@ -6,6 +6,7 @@ const app = require('./app');
 const { syncDB } = require('./models');
 const { runDigestCron } = require('./services/slackBotService');
 const { runScheduledScans } = require('./services/scanScheduleService');
+const { runScheduledDigests } = require('./services/digestEmailService');
 
 const PORT = process.env.PORT || 5000;
 
@@ -22,7 +23,12 @@ syncDB().then(() => {
     runScheduledScans().catch(e => console.error('[AutoScan cron]', e.message));
   });
 
-  console.log('Crons scheduled: Slack digest + auto-scan (hourly)');
+  // Email digest scheduler: checks for due digests every hour
+  cron.schedule('10 * * * *', () => {
+    runScheduledDigests().catch(e => console.error('[EmailDigest cron]', e.message));
+  });
+
+  console.log('Crons scheduled: Slack digest + auto-scan + email digest (hourly)');
 }).catch(err => {
   console.error('DB sync failed:', err);
   process.exit(1);
