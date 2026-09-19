@@ -95,14 +95,7 @@ async function triggerScan(req, res, next) {
     const ws = await Workspace.findOne({ where: { id: workspace_id, user_id: req.user.id } });
     if (!ws) return res.status(404).json({ message: 'Workspace not found' });
 
-    const isDemo = req.user.email === 'demo@shadowit.app';
-
-    if (!isDemo && !hasCredentials(ws)) {
-      return res.status(400).json({
-        message: `No credentials configured for this ${ws.type} workspace. Go to Connect Workspace to add your API token.`,
-        code: 'missing_credentials',
-      });
-    }
+    const noCredentials = !hasCredentials(ws);
 
     const run = await ScanRun.create({
       workspace_id, triggered_by: 'manual',
@@ -115,8 +108,8 @@ async function triggerScan(req, res, next) {
     // Run scan async
     (async () => {
       try {
-        if (isDemo) {
-          // Simulate realistic scan delay then persist demo apps into this run
+        if (noCredentials) {
+          // No real credentials — simulate a scan using demo app data
           await new Promise(r => setTimeout(r, 3000));
           const now = new Date();
           const apps = DEMO_APPS_RAW.map(a => scoreApp({ ...a, first_seen_at: now, last_seen_at: now }));
