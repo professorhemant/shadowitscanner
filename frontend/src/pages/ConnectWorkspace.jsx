@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createWorkspace } from '../api/workspaces';
 import { useNavigate } from 'react-router-dom';
@@ -27,6 +27,7 @@ export default function ConnectWorkspace() {
   });
   const [saFile, setSaFile] = useState(null);
   const [error, setError] = useState('');
+  const fileInputRef = useRef(null);
   const qc = useQueryClient();
   const navigate = useNavigate();
 
@@ -40,10 +41,19 @@ export default function ConnectWorkspace() {
 
   async function handleSubmit(e) {
     e.preventDefault(); setError('');
+    if (type === 'google' && !saFile) {
+      setError('Please choose a Service Account JSON key file.');
+      return;
+    }
     const payload = { ...form, type };
     if (type === 'google' && saFile) {
-      const text = await saFile.text();
-      payload.google_service_account = JSON.parse(text);
+      try {
+        const text = await saFile.text();
+        payload.google_service_account = JSON.parse(text);
+      } catch {
+        setError('Invalid JSON file — please upload a valid service account key.');
+        return;
+      }
     }
     mutation.mutate(payload);
   }
@@ -105,8 +115,34 @@ export default function ConnectWorkspace() {
             </div>
             <div>
               <label className="block text-sm text-slate-400 mb-1">Service Account JSON key</label>
-              <input type="file" accept=".json" onChange={e => setSaFile(e.target.files[0])} required
-                className="w-full text-sm text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-slate-700 file:text-slate-300 file:text-xs cursor-pointer" />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={e => setSaFile(e.target.files[0] || null)}
+                className="hidden"
+              />
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs rounded-lg border border-surface-border transition-colors shrink-0"
+                >
+                  Choose File
+                </button>
+                <span className="text-sm text-slate-400 truncate">
+                  {saFile ? saFile.name : 'No file chosen'}
+                </span>
+                {saFile && (
+                  <button
+                    type="button"
+                    onClick={() => { setSaFile(null); fileInputRef.current.value = ''; }}
+                    className="text-slate-600 hover:text-red-400 text-xs shrink-0"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
               <p className="text-xs text-slate-600 mt-1">Must have Admin SDK Reports API + domain-wide delegation configured.</p>
             </div>
           </>
