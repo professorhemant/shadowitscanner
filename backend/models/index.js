@@ -284,6 +284,24 @@ async function runMigrations() {
       await sequelize.query(`ALTER TYPE "enum_whitelisted_apps_source" ADD VALUE IF NOT EXISTS 'confluence'`);
       console.log('Migration: added confluence to whitelisted_apps.source enum');
     } catch (e) { /* already exists */ }
+
+    // Unique constraint on (workspace_id, app_id, source) — deduplicate across scan runs
+    try {
+      await sequelize.query(`
+        DELETE FROM discovered_apps da
+        WHERE id NOT IN (
+          SELECT DISTINCT ON (workspace_id, app_id, source) id
+          FROM discovered_apps
+          ORDER BY workspace_id, app_id, source, created_at DESC
+        )
+      `);
+      await sequelize.query(`
+        ALTER TABLE discovered_apps
+        ADD CONSTRAINT discovered_apps_workspace_app_source_unique
+        UNIQUE (workspace_id, app_id, source)
+      `);
+      console.log('Migration: added unique constraint (workspace_id, app_id, source) to discovered_apps');
+    } catch (e) { /* already exists */ }
   }
 
   // ── team_members ─────────────────────────────────────────────────────────

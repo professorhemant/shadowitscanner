@@ -58,7 +58,15 @@ async function persistScanResults(workspaceId, source, apps, triggeredBy, scanRu
       first_seen_at: a.first_seen_at || new Date(),
       last_seen_at: a.last_seen_at || new Date(),
     })),
-    { ignoreDuplicates: true }
+    {
+      updateOnDuplicate: [
+        'scan_run_id', 'app_name', 'app_description', 'developer', 'developer_url',
+        'icon_url', 'scopes', 'raw_data', 'is_verified', 'risk_score', 'risk_level',
+        'risk_factors', 'has_admin_scope', 'has_write_scope', 'accesses_email',
+        'accesses_calendar', 'accesses_drive', 'external_domain', 'user_count',
+        'is_ai_tool', 'ai_risk_flags', 'last_seen_at',
+      ],
+    }
   );
 
   await Workspace.update({ last_scan_at: new Date() }, { where: { id: workspaceId } });
