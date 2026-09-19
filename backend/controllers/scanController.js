@@ -74,11 +74,31 @@ async function persistScanResults(workspaceId, source, apps, triggeredBy, scanRu
   return run;
 }
 
+function hasCredentials(ws) {
+  switch (ws.type) {
+    case 'slack':      return !!(ws.slack_bot_token);
+    case 'google':     return !!(ws.google_service_account && ws.google_admin_email);
+    case 'microsoft':  return !!(ws.ms_tenant_id && ws.ms_client_id && ws.ms_client_secret);
+    case 'okta':       return !!(ws.okta_domain && ws.okta_api_token);
+    case 'github':     return !!(ws.github_org && ws.github_pat);
+    case 'jira':       return !!(ws.jira_domain && ws.jira_email && ws.jira_api_token);
+    case 'confluence': return !!(ws.confluence_domain && ws.confluence_email && ws.confluence_api_token);
+    default:           return false;
+  }
+}
+
 async function triggerScan(req, res, next) {
   try {
     const { workspace_id, source } = req.body;
     const ws = await Workspace.findOne({ where: { id: workspace_id, user_id: req.user.id } });
     if (!ws) return res.status(404).json({ message: 'Workspace not found' });
+
+    if (!hasCredentials(ws)) {
+      return res.status(400).json({
+        message: `No credentials configured for this ${ws.type} workspace. Go to Connect Workspace to add your API token.`,
+        code: 'missing_credentials',
+      });
+    }
 
     const run = await ScanRun.create({
       workspace_id, triggered_by: 'manual',

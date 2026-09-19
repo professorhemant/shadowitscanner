@@ -1,10 +1,12 @@
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getDashboardStats } from '../api/dashboard';
 import { listWorkspaces } from '../api/workspaces';
-import { triggerScan } from '../api/scans';
+import { triggerScan, getScanStatus } from '../api/scans';
 import { seedDemo } from '../api/demo';
 import { getBreaches } from '../api/breaches';
 import { useWorkspaceStore } from '../store/workspaceStore';
+import { useToastStore } from '../store/toastStore';
 import RiskSummaryCards from '../components/dashboard/RiskSummaryCards';
 import RiskPieChart from '../components/dashboard/RiskPieChart';
 import TrendLineChart from '../components/dashboard/TrendLineChart';
@@ -13,7 +15,11 @@ import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
   const { activeWorkspace, setWorkspaces, setActiveWorkspace, workspaces } = useWorkspaceStore();
+  const addToast = useToastStore(s => s.addToast);
   const qc = useQueryClient();
+  const [activeScanId, setActiveScanId] = useState(null);
+  const [scanStatus, setScanStatus] = useState(null); // null | 'running' | 'completed' | 'failed'
+  const pollRef = useRef(null);
 
   const { data: wsData } = useQuery({
     queryKey: ['workspaces'],
@@ -33,9 +39,43 @@ export default function Dashboard() {
     staleTime: 300_000,
   });
 
+  // Poll active scan status
+  useEffect(() => {
+    if (!activeScanId) return;
+    setScanStatus('running');
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await getScanStatus(activeScanId);
+        const run = res.data.run;
+        if (run.status === 'completed') {
+          clearInterval(pollRef.current);
+          setActiveScanId(null);
+          setScanStatus('completed');
+          qc.invalidateQueries(['dashboard']);
+          addToast(`Scan complete — ${run.apps_found} apps found (${run.critical_count} critical, ${run.high_count} high)`, 'success');
+          setTimeout(() => setScanStatus(null), 5000);
+        } else if (run.status === 'failed') {
+          clearInterval(pollRef.current);
+          setActiveScanId(null);
+          setScanStatus('failed');
+          addToast(`Scan failed: ${run.error_message || 'Unknown error'}`, 'error');
+          setTimeout(() => setScanStatus(null), 6000);
+        }
+      } catch { clearInterval(pollRef.current); setActiveScanId(null); setScanStatus(null); }
+    }, 3000);
+    return () => clearInterval(pollRef.current);
+  }, [activeScanId]);
+
   const scan = useMutation({
     mutationFn: () => triggerScan(activeWorkspace?.id),
-    onSuccess: () => setTimeout(() => qc.invalidateQueries(['dashboard']), 3000),
+    onSuccess: (res) => {
+      setActiveScanId(res.data.scan_run_id);
+      addToast('Scan started — results will appear in a few seconds', 'info');
+    },
+    onError: (err) => {
+      const msg = err.response?.data?.message || 'Failed to start scan';
+      addToast(msg, 'error');
+    },
   });
 
   const demo = useMutation({
@@ -97,13 +137,37 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => scan.mutate()}
-            disabled={!activeWorkspace || scan.isPending}
-            className="bg-brand-600 hover:bg-brand-500 text-white text-sm px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+            disabled={!activeWorkspace || scan.isPending || scanStatus === 'running'}
+            className="flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white text-sm px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
           >
-            {scan.isPending ? 'Scanning…' : '▶ Run Scan'}
+            {scanStatus === 'running' ? (
+              <>
+                <span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Scanning…
+              </>
+            ) : '▶ Run Scan'}
           </button>
         </div>
       </div>
+
+      {/* Scan status banner */}
+      {scanStatus === 'running' && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-brand-600/10 border border-brand-500/30 rounded-xl text-sm">
+          <span className="inline-block w-3.5 h-3.5 border-2 border-brand-400/40 border-t-brand-400 rounded-full animate-spin shrink-0" />
+          <span className="text-brand-300">Scan in progress — this usually takes 10–30 seconds…</span>
+        </div>
+      )}
+      {scanStatus === 'completed' && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-green-500/10 border border-green-500/30 rounded-xl text-sm text-green-300">
+          <span>✓</span> Scan completed — dashboard updated below.
+        </div>
+      )}
+      {scanStatus === 'failed' && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl text-sm text-red-300">
+          <span>✕</span> Scan failed. Check that your workspace credentials are configured in{' '}
+          <Link to="/connect" className="underline hover:text-red-200">Connect Workspace</Link>.
+        </div>
+      )}
 
       {/* Breach alert banner */}
       {breachData?.summary?.apps_with_breaches > 0 && (
