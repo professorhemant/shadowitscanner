@@ -204,6 +204,9 @@ function Nav() {
         </div>
         <div className="flex items-center gap-3">
           <Link to="/login"    className="hidden sm:block text-sm text-slate-400 hover:text-white transition-colors">Sign in</Link>
+          <Link to="/demo"     className="hidden sm:block text-sm border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white px-4 py-2 rounded-lg font-medium transition-colors">
+            Try demo
+          </Link>
           <Link to="/register" className="bg-brand-600 hover:bg-brand-500 text-white text-sm px-4 py-2 rounded-lg font-medium transition-colors">
             Start free →
           </Link>
@@ -251,8 +254,12 @@ export default function Landing() {
                 className="bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors shadow-lg shadow-blue-900/30">
                 Start free scan →
               </Link>
+              <Link to="/demo"
+                className="border border-amber-500/50 hover:border-amber-400 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 px-6 py-3 rounded-xl font-semibold text-sm transition-colors">
+                👀 Try live demo
+              </Link>
               <Link to="/pricing"
-                className="border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors">
+                className="border border-slate-600 hover:border-slate-400 text-slate-400 hover:text-white px-6 py-3 rounded-xl font-semibold text-sm transition-colors">
                 View pricing
               </Link>
             </div>
@@ -471,6 +478,10 @@ export default function Landing() {
             <Link to="/register"
               className="bg-brand-600 hover:bg-brand-500 text-white px-8 py-3.5 rounded-xl font-semibold text-sm transition-colors shadow-lg shadow-blue-900/40">
               Start your free scan →
+            </Link>
+            <Link to="/demo"
+              className="border border-amber-500/50 hover:border-amber-400 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 px-8 py-3.5 rounded-xl font-semibold text-sm transition-colors">
+              👀 Try live demo
             </Link>
             <a href="mailto:sales@shadowit.app"
               className="border border-slate-600 hover:border-slate-400 text-slate-300 hover:text-white px-8 py-3.5 rounded-xl font-semibold text-sm transition-colors">

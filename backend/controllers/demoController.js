@@ -1,7 +1,12 @@
 'use strict';
 
-const { Workspace, ScanRun, DiscoveredApp } = require('../models');
+const bcrypt = require('bcryptjs');
+const { Workspace, ScanRun, DiscoveredApp, User } = require('../models');
 const { scoreApp } = require('../services/riskEngine');
+const { signToken } = require('../services/tokenService');
+
+const DEMO_EMAIL = 'demo@shadowit.app';
+const DEMO_NAME  = 'Demo User';
 
 const DEMO_APPS_RAW = [
   // ── AI Tools ──────────────────────────────────────────────────────────────
@@ -159,9 +164,105 @@ const DEMO_APPS_RAW = [
   },
 ];
 
+async function _seedWorkspace(userId, workspaceId) {
+  const now = new Date();
+  const scored = DEMO_APPS_RAW.map(a => scoreApp({ ...a, first_seen_at: now, last_seen_at: now }));
+  const counts = { critical: 0, high: 0, medium: 0, low: 0 };
+  for (const a of scored) counts[a.risk_level]++;
+
+  const run = await ScanRun.create({
+    workspace_id: workspaceId,
+    triggered_by: 'manual',
+    source: 'google',
+    status: 'running',
+    started_at: new Date(Date.now() - 45000),
+  });
+
+  await DiscoveredApp.bulkCreate(
+    scored.map(a => ({
+      scan_run_id: run.id,
+      workspace_id: workspaceId,
+      source: a.source,
+      app_id: a.app_id,
+      app_name: a.app_name,
+      app_description: a.app_description || '',
+      developer: a.developer || '',
+      developer_url: a.developer_url || '',
+      icon_url: a.icon_url || '',
+      scopes: a.scopes,
+      raw_data: {},
+      is_verified: !!a.is_verified,
+      risk_score: a.risk_score,
+      risk_level: a.risk_level,
+      risk_factors: a.risk_factors,
+      has_admin_scope: !!a.has_admin_scope,
+      has_write_scope: !!a.has_write_scope,
+      accesses_email: !!a.accesses_email,
+      accesses_calendar: !!a.accesses_calendar,
+      accesses_drive: !!a.accesses_drive,
+      external_domain: !!a.external_domain,
+      user_count: a.user_count || 0,
+      is_ai_tool: !!a.is_ai_tool,
+      ai_risk_flags: a.ai_risk_flags || null,
+      first_seen_at: now,
+      last_seen_at: now,
+    })),
+    { ignoreDuplicates: true }
+  );
+
+  await run.update({
+    status: 'completed',
+    apps_found: scored.length,
+    critical_count: counts.critical,
+    high_count: counts.high,
+    medium_count: counts.medium,
+    low_count: counts.low,
+    completed_at: new Date(),
+  });
+
+  await Workspace.update({ last_scan_at: new Date() }, { where: { id: workspaceId } });
+  return { scored, counts };
+}
+
+async function demoLogin(req, res, next) {
+  try {
+    // Find or create the demo user
+    let user = await User.findOne({ where: { email: DEMO_EMAIL } });
+    if (!user) {
+      const password_hash = await bcrypt.hash('demo-' + Date.now(), 10);
+      user = await User.create({ name: DEMO_NAME, email: DEMO_EMAIL, password_hash, is_verified: true, plan: 'pro' });
+    }
+
+    // Find or create demo workspace
+    let ws = await Workspace.findOne({ where: { user_id: user.id, name: 'Acme Corp (Demo)' } });
+    const fresh = !ws;
+    if (!ws) {
+      ws = await Workspace.create({
+        user_id: user.id,
+        name: 'Acme Corp (Demo)',
+        type: 'google',
+        google_domain: 'acmecorp.com',
+        google_admin_email: 'admin@acmecorp.com',
+        is_active: true,
+      });
+    }
+
+    // Seed data only on first creation
+    if (fresh) {
+      await _seedWorkspace(user.id, ws.id);
+    }
+
+    const token = signToken(user.id);
+    res.json({
+      token,
+      user: { id: user.id, name: DEMO_NAME, email: DEMO_EMAIL, plan: 'pro', is_demo: true },
+      workspace_id: ws.id,
+    });
+  } catch (err) { next(err); }
+}
+
 async function seedDemo(req, res, next) {
   try {
-    // Find or create a demo workspace
     let ws = await Workspace.findOne({ where: { user_id: req.user.id, name: 'Demo Workspace (Acme Corp)' } });
     if (!ws) {
       ws = await Workspace.create({
@@ -173,67 +274,7 @@ async function seedDemo(req, res, next) {
         is_active: true,
       });
     }
-
-    // Create a scan run
-    const run = await ScanRun.create({
-      workspace_id: ws.id,
-      triggered_by: 'manual',
-      source: 'google',
-      status: 'running',
-      started_at: new Date(Date.now() - 45000),
-    });
-
-    // Score all apps through the real engine (AI detection runs here)
-    const now = new Date();
-    const scored = DEMO_APPS_RAW.map(a => scoreApp({ ...a, first_seen_at: now, last_seen_at: now }));
-
-    const counts = { critical: 0, high: 0, medium: 0, low: 0 };
-    for (const a of scored) counts[a.risk_level]++;
-
-    await DiscoveredApp.bulkCreate(
-      scored.map(a => ({
-        scan_run_id: run.id,
-        workspace_id: ws.id,
-        source: a.source,
-        app_id: a.app_id,
-        app_name: a.app_name,
-        app_description: a.app_description || '',
-        developer: a.developer || '',
-        developer_url: a.developer_url || '',
-        icon_url: a.icon_url || '',
-        scopes: a.scopes,
-        raw_data: {},
-        is_verified: !!a.is_verified,
-        risk_score: a.risk_score,
-        risk_level: a.risk_level,
-        risk_factors: a.risk_factors,
-        has_admin_scope: !!a.has_admin_scope,
-        has_write_scope: !!a.has_write_scope,
-        accesses_email: !!a.accesses_email,
-        accesses_calendar: !!a.accesses_calendar,
-        accesses_drive: !!a.accesses_drive,
-        external_domain: !!a.external_domain,
-        user_count: a.user_count || 0,
-        is_ai_tool: !!a.is_ai_tool,
-        ai_risk_flags: a.ai_risk_flags || null,
-        first_seen_at: now,
-        last_seen_at: now,
-      })),
-      { ignoreDuplicates: true }
-    );
-
-    await run.update({
-      status: 'completed',
-      apps_found: scored.length,
-      critical_count: counts.critical,
-      high_count: counts.high,
-      medium_count: counts.medium,
-      low_count: counts.low,
-      completed_at: new Date(),
-    });
-
-    await Workspace.update({ last_scan_at: new Date() }, { where: { id: ws.id } });
-
+    const { scored, counts } = await _seedWorkspace(req.user.id, ws.id);
     res.json({
       message: 'Demo data loaded',
       workspace_id: ws.id,
@@ -244,4 +285,4 @@ async function seedDemo(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { seedDemo };
+module.exports = { seedDemo, demoLogin };

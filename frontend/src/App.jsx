@@ -32,6 +32,7 @@ import Team from './pages/Team';
 import Policies from './pages/Policies';
 import ApiKeys from './pages/ApiKeys';
 import Pricing from './pages/Pricing';
+import Demo from './pages/Demo';
 
 export default function App() {
   const { token, setAuth, logout } = useAuthStore();
@@ -46,6 +47,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/demo" element={<Demo />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/request/:workspaceId" element={<RequestApproval />} />
