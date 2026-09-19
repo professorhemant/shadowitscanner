@@ -33,6 +33,7 @@ import Policies from './pages/Policies';
 import ApiKeys from './pages/ApiKeys';
 import Pricing from './pages/Pricing';
 import Demo from './pages/Demo';
+import Toast from './components/Toast';
 
 export default function App() {
   const { token, setAuth, logout } = useAuthStore();
@@ -79,6 +80,7 @@ export default function App() {
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <Toast />
     </BrowserRouter>
   );
 }

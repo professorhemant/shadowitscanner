@@ -14,6 +14,13 @@ client.interceptors.request.use(cfg => {
 client.interceptors.response.use(
   r => r,
   err => {
+    const data = err.response?.data;
+    if (data?.demo_readonly) {
+      import('../store/toastStore').then(({ useToastStore }) => {
+        useToastStore.getState().addToast('Read-only demo — sign up free to make changes.', 'demo');
+      });
+      return Promise.reject(err);
+    }
     const onAuthPage = ['/login', '/register'].some(p => window.location.pathname.startsWith(p));
     if (err.response?.status === 401 && !onAuthPage) {
       localStorage.removeItem('shadow_token');

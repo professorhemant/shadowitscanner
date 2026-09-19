@@ -4,6 +4,19 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { User } = require('../models');
 
+const DEMO_EMAIL = 'demo@shadowit.app';
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+function demoGuard(req, res, next) {
+  if (req.user?.email === DEMO_EMAIL && !SAFE_METHODS.has(req.method)) {
+    return res.status(403).json({
+      message: 'This is a read-only demo. Sign up free to make changes to real data.',
+      demo_readonly: true,
+    });
+  }
+  next();
+}
+
 async function authenticate(req, res, next) {
   const header = req.headers.authorization;
   if (!header || !header.startsWith('Bearer ')) {
@@ -23,12 +36,12 @@ async function authenticate(req, res, next) {
       }
       const user = await User.findByPk(apiKey.user_id, { attributes: { exclude: ['password_hash'] } });
       if (!user) return res.status(401).json({ message: 'User not found' });
-      // update last_used_at non-blocking
       apiKey.update({ last_used_at: new Date() }).catch(() => {});
       req.user = user;
       req.apiKey = apiKey;
-      return next();
-    } catch (err) {
+      demoGuard(req, res, next);
+      return;
+    } catch {
       return res.status(401).json({ message: 'API key error' });
     }
   }
@@ -39,7 +52,7 @@ async function authenticate(req, res, next) {
     const user = await User.findByPk(payload.sub, { attributes: { exclude: ['password_hash'] } });
     if (!user) return res.status(401).json({ message: 'User not found' });
     req.user = user;
-    next();
+    demoGuard(req, res, next);
   } catch {
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
