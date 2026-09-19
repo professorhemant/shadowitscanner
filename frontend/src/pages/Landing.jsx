@@ -18,6 +18,7 @@ export default function Landing() {
           <span>🛡️</span> Shadow IT
         </div>
         <div className="flex items-center gap-4">
+          <Link to="/pricing" className="text-sm text-slate-400 hover:text-white transition-colors">Pricing</Link>
           <Link to="/login" className="text-sm text-slate-400 hover:text-white transition-colors">Sign in</Link>
           <Link to="/register" className="bg-brand-600 hover:bg-brand-700 text-white text-sm px-4 py-2 rounded-lg font-medium transition-colors">
             Get started free
